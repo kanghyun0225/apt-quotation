@@ -95,7 +95,6 @@ tr:hover td{background:#f5f8fc}
   .card-hd{display:none}
   .supply-col,.pi,.supply-th{display:none!important}
   th.supply-th,td.supply-td{display:none!important}
-  .src-badge,.cretek-code{display:none!important}
   table{font-size:10px}
   td,th{padding:4px 4px}
   .si{border:none;background:none;font-size:10px}
@@ -625,12 +624,12 @@ function makeTable(cat, items, s, margin) {
     const sp = sellPrice(supply, margin);
     const amt = qty * sp;
     const brand = f.brand ? `<span style="font-size:10px;color:#888">${f.brand}</span><br>` : '';
-    const code  = f.code  ? `<span class="cretek-code" style="font-size:9px;color:#bbb">${f.code}</span>` : '';
+    const code  = f.code  ? `<span style="font-size:9px;color:#bbb">${f.code}</span>` : '';
     const srcBadge = f.src === 'naver'
-      ? `<span class="src-badge" style="font-size:9px;background:#fff3e0;color:#e65100;border:1px solid #ffb74d;border-radius:3px;padding:0 3px;margin-left:3px">네이버</span>`
+      ? `<span style="font-size:9px;background:#fff3e0;color:#e65100;border:1px solid #ffb74d;border-radius:3px;padding:0 3px;margin-left:3px">네이버</span>`
       : f.src === 'hanyang'
-      ? `<span class="src-badge" style="font-size:9px;background:#e8f5e9;color:#2e7d32;border:1px solid #81c784;border-radius:3px;padding:0 3px;margin-left:3px">한양유통</span>`
-      : (f.code ? `<span class="src-badge" style="font-size:9px;background:#e3f2fd;color:#1565c0;border:1px solid #90caf9;border-radius:3px;padding:0 3px;margin-left:3px">크레텍</span>` : '');
+      ? `<span style="font-size:9px;background:#e8f5e9;color:#2e7d32;border:1px solid #81c784;border-radius:3px;padding:0 3px;margin-left:3px">한양유통</span>`
+      : (f.code ? `<span style="font-size:9px;background:#e3f2fd;color:#1565c0;border:1px solid #90caf9;border-radius:3px;padding:0 3px;margin-left:3px">크레텍</span>` : '');
     const spec  = typeof f.spec === 'function' ? f.spec(s) : f.spec;
     rows += `<tr>
       <td class="tc" style="color:#999;font-size:11px">${f.no}</td>
@@ -797,4 +796,13 @@ function calculate() {
       <span class="sb">🧹 미화 ${s.미화}명</span>
     </div>
     ${tabsHtml}
-    ${pane
+    ${panesHtml}
+  `;
+  switchTab(activeTab);
+  // 각 탭 소계 계산 후 요약 업데이트
+  Object.keys(DATA).forEach(c => recalcSub(c));
+  updateSummary();
+}
+</script>
+</body>
+</html>
