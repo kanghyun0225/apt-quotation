@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>납품 견적 요청</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Malgun Gothic',sans-serif;background:#f0f2f5;color:#333;font-size:14px}
+.header{background:#1e3a5f;color:#fff;padding:16px 20px;text-align:center}
+.header h1{font-size:18px;font-weight:700}
+.header p{font-size:12px;opacity:.8;margin-top:4px}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #1e3a5f;position:sticky;top:0;z-index:10}
+.tab{flex:1;padding:12px 4px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:#888;border-bottom:3px solid transparent;transition:.2s}
+.tab.active{color:#1e3a5f;border-bottom-color:#1e3a5f}
+.tab-badge{display:inline-block;background:#e0e6ef;color:#1e3a5f;border-radius:10px;font-size:11px;padding:1px 7px;margin-left:4px}
+.content{padding:12px}
+.section{display:none}
+.section.active{display:block}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+th{background:#1e3a5f;color:#fff;padding:10px 8px;text-align:center;font-size:12px;font-weight:600}
+th:first-child{text-align:left;width:40px}
+th:nth-child(2){text-align:left}
+th:last-child{width:90px}
+td{padding:8px;border-bottom:1px solid #f0f0f0;font-size:13px;vertical-align:middle}
+td:first-child{text-align:center;color:#aaa;font-size:12px}
+td:last-child{text-align:center}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f7f9fc}
+.qty-input{width:70px;padding:5px 8px;border:1.5px solid #ccd6e0;border-radius:6px;text-align:center;font-size:14px;font-family:inherit}
+.qty-input:focus{outline:none;border-color:#1e3a5f;background:#f0f5ff}
+.qty-input.has-value{border-color:#2e7d32;background:#f1f8e9;font-weight:700}
+.spec{font-size:11px;color:#999;display:block;margin-top:1px}
+.bottom-bar{position:sticky;bottom:0;background:#fff;border-top:2px solid #1e3a5f;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -2px 8px rgba(0,0,0,.1)}
+.summary{font-size:13px;color:#555}
+.summary strong{color:#1e3a5f;font-size:16px}
+.btn-send{background:#1e3a5f;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0}
+.btn-send:hover{background:#2a4f82}
+.btn-send:disabled{background:#aaa;cursor:not-allowed}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:12px;padding:28px 24px;max-width:360px;width:90%;text-align:center}
+.modal h2{font-size:18px;color:#1e3a5f;margin-bottom:10px}
+.modal p{font-size:14px;color:#555;margin-bottom:8px;line-height:1.6}
+.modal .icon{font-size:48px;margin-bottom:12px}
+.modal .btn-close{margin-top:20px;background:#1e3a5f;color:#fff;border:none;padding:10px 32px;border-radius:8px;font-size:15px;cursor:pointer;font-family:inherit}
+.name-input-row{padding:12px 16px;background:#fff;border-bottom:1px solid #eee}
+.name-input-row label{font-size:12px;color:#888;display:block;margin-bottom:4px}
+.name-input-row input{width:100%;padding:8px 12px;border:1.5px solid #ccd6e0;border-radius:6px;font-size:14px;font-family:inherit}
+.name-input-row input:focus{outline:none;border-color:#1e3a5f}
+.selected-count{font-size:12px;color:#2e7d32;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 납품 견적 요청</h1>
+  <p>한스코퍼레이션 | 필요한 품목의 수량을 입력해 주세요</p>
+</div>
+
+<div class="name-input-row">
+  <label>아파트/단지명 (필수)</label>
+  <input type="text" id="aptName" placeholder="예) 힐스테이트 ○○○ 관리사무소">
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('용품')">사무용품 <span class="tab-badge" id="badge-용품">0</span></div>
+  <div class="tab" onclick="switchTab('공기구')">공기구 <span class="tab-badge" id="badge-공기구">0</span></div>
+  <div class="tab" onclick="switchTab('미화')">미화용품 <span class="tab-badge" id="badge-미화">0</span></div>
+</div>
+
+<div class="content">
+  <div id="section-용품" class="section active"></div>
+  <div id="section-공기구" class="section"></div>
+  <div id="section-미화" class="section"></div>
+</div>
+
+<div class="bottom-bar">
+  <div class="summary">
+    입력된 품목: <strong id="totalCount">0</strong>개
+    <div class="selected-count" id="selectedInfo"></div>
+  </div>
+  <button class="btn-send" id="btnSend" onclick="sendRequest()">📨 견적 요청 보내기</button>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="icon" id="modalIcon">✅</div>
+    <h2 id="modalTitle">전송 완료</h2>
+    <p id="modalMsg">견적 요청이 한스코퍼레이션으로 전달됐습니다.<br>확인 후 빠르게 연락드리겠습니다.</p>
+    <button class="btn-close" onclick="closeModal()">확인</button>
+  </div>
+</div>
+
+<script>
+const ITEMS = {
+  용품: [
+  {no:1, name:"코팅기", spec:"PL-330L PLUS ECO(A3)"},
+  {no:2, name:"코팅지", spec:"A4-100mic(100장)"},
+  {no:3, name:"코팅지", spec:"A3-100mic(100장)"},
+  {no:4, name:"세단기", spec:"PK-120AF(25ℓ)"},
+  {no:5, name:"화이트보드", spec:"무지 900x600(자석)"},
+  {no:6, name:"화이트보드", spec:"무지 1,200x900(자석)"},
+  {no:7, name:"화이트보드", spec:"월중계획표 900x600(자석)"},
+  {no:8, name:"화이트보드", spec:"월중계획표 1,200x900(자석)"},
+  {no:9, name:"컬러원형자석홀더(중)", spec:"MFMH-27-10(27Φx9.0T,1통=10EA)"},
+  {no:10, name:"고정펀치", spec:"2공/7cm/30매"},
+  {no:11, name:"펀치", spec:"3공이동펀치"},
+  {no:12, name:"스테플러", spec:"35호"},
+  {no:13, name:"스테플러핀", spec:"33호 침(1통=10갑)"},
+  {no:14, name:"계산기", spec:"MS-120FM (old.MS-120BM)"},
+  {no:15, name:"정부화일", spec:"PP 정부화일 10매"},
+  {no:16, name:"클리어파일", spec:"20P컬러파일(보급형) 녹색 4322-3"},
+  {no:17, name:"클리어파일", spec:"40P컬러파일(보급형) 분홍 4342-3"},
+  {no:18, name:"클립통", spec:"원형자석클립통"},
+  {no:19, name:"클립", spec:"600크립(1통=10갑)"},
+  {no:20, name:"스프링화일", spec:"PP 상철"},
+  {no:21, name:"스테플러", spec:"HD-2400 스테플러"},
+  {no:22, name:"스테플러핀", spec:"H-13(12MM) 1통=10갑"},
+  {no:23, name:"스테플러핀", spec:"H-13(24MM) 1통=10갑"},
+  {no:24, name:"홀더파일", spec:"L홀더 백색 55L"},
+  {no:25, name:"유성매직", spec:"파랑"},
+  {no:26, name:"유성매직", spec:"빨강"},
+  {no:27, name:"유성매직", spec:"검정"},
+  {no:28, name:"보드마카", spec:"파랑"},
+  {no:29, name:"보드마카", spec:"검정"},
+  {no:30, name:"보드마카", spec:"빨강"},
+  {no:31, name:"지우개", spec:"화이트보드용"},
+  {no:32, name:"네임펜", spec:"파랑"},
+  {no:33, name:"네임펜", spec:"빨강"},
+  {no:34, name:"네임펜", spec:"검정"},
+  {no:35, name:"네임펜(가는글씨용)", spec:"검정"},
+  {no:36, name:"볼펜", spec:"3색볼펜S"},
+  {no:37, name:"FX제타볼펜", spec:"빨강(0.7)"},
+  {no:38, name:"FX제타볼펜", spec:"파랑(0.7)"},
+  {no:39, name:"FX제타볼펜", spec:"검정(0.7)"},
+  {no:40, name:"스톱펜", spec:"향균(0.7) 연파랑6+진파랑6"},
+  {no:41, name:"형광펜(에딩슈퍼)", spec:"노랑"},
+  {no:42, name:"형광펜(에딩슈퍼)", spec:"핑크"},
+  {no:43, name:"형광펜(에딩슈퍼)", spec:"녹색"},
+  {no:44, name:"원터치 인주", spec:"원터치인주100"},
+  {no:45, name:"스타박스 컷팅자", spec:"20cm"},
+  {no:46, name:"스타박스 컷팅자", spec:"30cm"},
+  {no:47, name:"스타박스 컷팅자", spec:"50cm"},
+  {no:48, name:"커터칼", spec:"K-201"},
+  {no:49, name:"커터칼", spec:"K-206"},
+  {no:50, name:"커터칼날", spec:"K-201B"},
+  {no:51, name:"커터칼날", spec:"K-214B"},
+  {no:52, name:"연필꽂이", spec:"WELL&GOOD 쿨그레이"},
+  {no:53, name:"사무용가위", spec:"M-505"},
+  {no:54, name:"M플래그/인덱스/지그재그", spec:"44*12mm/10매*9색/9+1세트"},
+  {no:55, name:"포스트잇", spec:"디스펜서+팝업리필 C-4214(노랑)"},
+  {no:56, name:"수정테이프", spec:"WH-605(5mm)"},
+  {no:57, name:"수정테이프리필", spec:"WH-605R-2P(5mm)"},
+  {no:58, name:"제침기", spec:"겸용제침기"},
+  {no:59, name:"양면테이프", spec:"24*10 (1BOX/100EA)"},
+  {no:60, name:"양면테이프", spec:"48*10 (1BOX/50EA)"},
+  {no:61, name:"면테이프(G)", spec:"녹색48*10"},
+  {no:62, name:"OPP테이프", spec:"투명 48*40M (아크릴)55mic"},
+  {no:63, name:"테이프커터기", spec:"자석테이프커터기"},
+  {no:64, name:"스카치테이프", spec:"581 다용도(18mmx15M)"},
+  {no:65, name:"스카치테이프", spec:"SH1825D 다용도(18mmx25M)"},
+  {no:66, name:"스카치테이프", spec:"810D 매직(18mmx30M)"},
+  {no:67, name:"결재판", spec:"결재바람(창무) 193"},
+  {no:68, name:"더블클립", spec:"소(1갑=50개)"},
+  {no:69, name:"더블클립", spec:"중(1갑=50개)"},
+  {no:70, name:"더블클립", spec:"대(1갑=30개)"},
+  {no:71, name:"더블클립", spec:"특대(1갑=10개)"},
+  {no:72, name:"딱풀", spec:"투명풀16g"},
+  {no:73, name:"애니라벨/V3240-100", spec:"100매/16칸/우편발송"},
+  {no:74, name:"애니라벨/V3110-100", spec:"100매/1칸/화물물류관리용"},
+  {no:75, name:"애니라벨/정부문서화일", spec:"2세트/20매"},
+  {no:76, name:"희망 3공 D링바인더", spec:"A4/3공/7cm/흑색"},
+  {no:77, name:"화일속지 고급형 / 1.25T", spec:"A4/20P"},
+  {no:78, name:"멀티책꽂이", spec:"3단-GR(335x208x213)"},
+  {no:79, name:"디럭스칼라서류함", spec:"4단-GRAY(290x340x240)"},
+  {no:80, name:"네오트레이", spec:"3단-GRAY(263x336x240)"},
+  {no:81, name:"복사지", spec:"밀크 A4(80G)"},
+  {no:82, name:"복사지", spec:"밀크 A3(75G)"},
+  {no:83, name:"벽시계/저소음/MDF", spec:"대"},
+  {no:84, name:"스탬프", spec:"흑색"},
+  {no:85, name:"결재판", spec:"PS투명 클립보드 파랑 15-2"},
+  {no:86, name:"구급함", spec:"스마트1호"},
+  {no:87, name:"종이컵관리기", spec:"자석 부착형 종이컵 디스펜서"},
+  {no:88, name:"종이컵관리기", spec:"종이컵 수거함"},
+  {no:89, name:"종이컵", spec:"1000개입"},
+  {no:90, name:"물티슈", spec:"100매/박스/24개입"},
+  {no:91, name:"각티슈", spec:"170매*3입"},
+  {no:92, name:"커피믹스/모카골드", spec:"12g*170T"},
+  {no:93, name:"현미녹차", spec:"1.5g*100T"},
+  {no:94, name:"둥굴레차", spec:"1.2g*100T"},
+  {no:95, name:"국민휴지통(사각/스윙)", spec:"10L(그레이)"},
+  {no:96, name:"멀티코드(차단스위치)", spec:"5구 16A x 3M (HDGM16-53)"},
+  {no:97, name:"멀티코드(차단스위치)", spec:"5구 16A x 1.5M (HDGM16-52)"},
+  {no:98, name:"전자호루라기", spec:"EW-01B(블랙)"},
+  {no:99, name:"신호봉", spec:"HN-50"},
+  {no:100, name:"건전지(망간)", spec:"D(R20)(1판=2EA)"},
+  {no:101, name:"커팅매트", spec:"A3 네이비"},
+  {no:102, name:"커팅매트", spec:"A2 네이비"},
+  {no:103, name:"라벨프린터", spec:"LW-K200BL"},
+  {no:104, name:"라벨테이프", spec:"SS-18K 흰색/검정"},
+  {no:105, name:"라벨테이프", spec:"SC-18Y 노랑/검정"},
+  {no:106, name:"카드링", spec:"MCR-40(40mm)(1통=50EA)"},
+  {no:107, name:"자석클립보드(스탠딩)", spec:"MSCB-A4"},
+  {no:108, name:"열쇠보관함", spec:"120P"},
+  {no:109, name:"허브", spec:"100045798/USB 3.0 4포트"},
+  {no:110, name:"명함꽂이", spec:"3호"},
+  {no:111, name:"인덱스북", spec:"인덱스30"},
+  {no:112, name:"엔트랩매트", spec:"4.5Tx1200x5M(적색),EMR-5M"},
+  {no:113, name:"POP 명패", spec:"200*80"},
+  {no:114, name:"외장하드", spec:"2TB"},
+  {no:115, name:"수입지 펀치리스 화일", spec:"A5 계산서(2P)"},
+  {no:116, name:"153볼펜", spec:"검정(0.7)"},
+  {no:117, name:"양면테이프(PE폼)", spec:"#4421W  12*2M (1BOX/36EA)"},
+  {no:118, name:"양면테이프(PE폼)", spec:"#4421W  24*2M (1BOX/20EA)"}
+],
+  공기구: [
+  {no:1, name:"절연저항계(아날로그)", spec:"SH-1000M"},
+  {no:2, name:"접지저항계(디지털)", spec:"SH-5030S"},
+  {no:3, name:"롱노우즈플라이어", spec:"150mm (6"},
+  {no:4, name:"테크트럭(무소음)", spec:"중"},
+  {no:5, name:"핸드카", spec:"SM-HC01S"},
+  {no:6, name:"각삽", spec:"HS-AGS501"},
+  {no:7, name:"막삽", spec:"HS-AMS503"},
+  {no:8, name:"공구함", spec:"SM-T402"},
+  {no:9, name:"공구가방", spec:"SB-3002"},
+  {no:10, name:"가스토치", spec:"ST-209"},
+  {no:11, name:"코트형우의SI-102", spec:"원피스 XL곤색"},
+  {no:12, name:"패션장화", spec:"패션남대장(275)"},
+  {no:13, name:"사다리(광폭가정용)", spec:"IGW-03"},
+  {no:14, name:"사다리(A형)", spec:"MT-05 (5단)"},
+  {no:15, name:"톱대", spec:"BL-7012"},
+  {no:16, name:"톱날(HSS)", spec:"300mm (12"},
+  {no:17, name:"쥐꼬리톱", spec:"J-210"},
+  {no:18, name:"고무망치", spec:"SB-RH66 (24oz)"},
+  {no:19, name:"빠루망치(TPR자루)", spec:"450g (16oz)"},
+  {no:20, name:"오해머", spec:"YGL-60S (8LBS)"},
+  {no:21, name:"돌망치", spec:"SBSL-420(장대)"},
+  {no:22, name:"파이프렌치", spec:"300mm (12"},
+  {no:23, name:"파이프렌치", spec:"450mm (18"},
+  {no:24, name:"몽키", spec:"250mm (10"},
+  {no:25, name:"몽키", spec:"375mm (15"},
+  {no:26, name:"핸드소켓세트", spec:"GS-416MA 1/2*8~27 16P"},
+  {no:27, name:"워터펌프플라이어", spec:"300mm (12"},
+  {no:28, name:"다목적드릴비트세트", spec:"Promo-X line (33pcs)"},
+  {no:29, name:"볼트커터ARM타입", spec:"SB-BC450 (18"},
+  {no:30, name:"다목적가위", spec:"SM-MS8S"},
+  {no:31, name:"양손가위(조경)", spec:"SB-800A"},
+  {no:32, name:"핫멜트건", spec:"GR-60 (40W)"},
+  {no:33, name:"막대본드", spec:"SB-GS11 11￠*270 (1KG /백색) 35~37EA"},
+  {no:34, name:"펜치", spec:"200mm (8"},
+  {no:35, name:"니퍼", spec:"160mm (6"},
+  {no:36, name:"시계드라이버세트", spec:"SB-PS6SP"},
+  {no:37, name:"다가네드라이버", spec:"3800 8*200(-)"},
+  {no:38, name:"주먹양용드라이버", spec:"SB-PSD65"},
+  {no:39, name:"전공양용드라이버", spec:"1100 (+)#2x(-)6-150"},
+  {no:40, name:"절연테이프", spec:"검정 19*10M #170"},
+  {no:41, name:"테프론테이프(보급형)", spec:"SMT-TT1"},
+  {no:42, name:"구리스펌프(권총형)", spec:"SB-GG500P"},
+  {no:43, name:"구리스(카트리지)", spec:"SB-CG400(400CC,SB-TGG500D포함 범용)"},
+  {no:44, name:"반코팅장갑", spec:"13G"},
+  {no:45, name:"목장갑", spec:"60G(백색)"},
+  {no:46, name:"NBR폼코팅장갑", spec:"슈퍼그립200 회색L"},
+  {no:47, name:"건전지(알카라인)", spec:"LR03(AAA) (1판=2EA)비닐포장"},
+  {no:48, name:"건전지(알카라인)", spec:"LR6(AA) (1판=2EA)비닐포장"},
+  {no:49, name:"케이블타이", spec:"100mm 흑색(1000EA)"},
+  {no:50, name:"케이블타이", spec:"140mm 흑색(1000EA)"},
+  {no:51, name:"케이블타이", spec:"200mm 흑색(1000EA)"},
+  {no:52, name:"케이블타이", spec:"300mm 흑색(500EA)"},
+  {no:53, name:"케이블타이", spec:"370mm 흑색(300EA)"},
+  {no:54, name:"칼브럭", spec:"6x35mm 200EA(F/D적색)"},
+  {no:55, name:"직결피스(와셔형)", spec:"8x13W 500EA"},
+  {no:56, name:"직결피스(와셔형)", spec:"8x20W 500EA"},
+  {no:57, name:"직결피스(와셔형)", spec:"8x32W 500EA"},
+  {no:58, name:"직결피스(접시형)", spec:"8x13F 500EA"},
+  {no:59, name:"직결피스(접시형)", spec:"8x20F 500EA"},
+  {no:60, name:"직결피스(접시형)", spec:"8x32F 500EA"},
+  {no:61, name:"실리콘건", spec:"SMC-101"},
+  {no:62, name:"실리콘(무초산)", spec:"E-7000반투명 270ml"},
+  {no:63, name:"순간접착제", spec:"401*20g Blister (459962)"},
+  {no:64, name:"윤활방청제", spec:"WD-40 360ml"},
+  {no:65, name:"스티커 점착 제거제", spec:"IS-7510 420ml 스티커·타르제거제"},
+  {no:66, name:"안전모", spec:"H101투구자동백색"},
+  {no:67, name:"안전띠", spec:"위험테이프 백색"},
+  {no:68, name:"스프레이접착제", spec:"#77 455ML (16oz)"},
+  {no:69, name:"하이스드릴세트", spec:"13본조"},
+  {no:70, name:"콘크리트드릴", spec:"3.0MM"},
+  {no:71, name:"콘크리트드릴", spec:"6.0MM"},
+  {no:72, name:"콘크리트드릴", spec:"6.5MM"},
+  {no:73, name:"알루미늄자석수평", spec:"300mm (12"},
+  {no:74, name:"이지스트리퍼", spec:"SB-661T"},
+  {no:75, name:"절단석", spec:"4 (WPSG FUSION PN1994, 100mm)"},
+  {no:76, name:"보안경", spec:"OX1000"},
+  {no:77, name:"디지털테스터(포켓)", spec:"SH-3230 (=ST3230)"},
+  {no:78, name:"모듈러압착기", spec:"SB-568"},
+  {no:79, name:"네오화이버줄자", spec:"KMC-330 (50M*13)"},
+  {no:80, name:"카멜레온줄자", spec:"KMC-15 (5.5M*19)"},
+  {no:81, name:"볼렌치세트(엑스트라롱)", spec:"SB-BWS9EL"},
+  {no:82, name:"충전라이트(LED)", spec:"SLR-1000LMZ (=구모델: SLR-400LM)"},
+  {no:83, name:"작업등-LED", spec:"WL-301-2 (충전식)"},
+  {no:84, name:"전선릴", spec:"SMATO-G-1550 (1.5x50)"},
+  {no:85, name:"수중펌프", spec:"HGD-600MA"},
+  {no:86, name:"저압나선호스", spec:"50MMx20M"},
+  {no:87, name:"편사호스", spec:"16MMx45M"},
+  {no:88, name:"분사기", spec:"ASG-6"},
+  {no:89, name:"천막호스", spec:"50MM(2"},
+  {no:90, name:"육각빠루(보급형)", spec:"SM-16W1000 (1000MM)"},
+  {no:91, name:"원형오뚜기주차금지", spec:"PE 380*1100"},
+  {no:92, name:"전체식허리그네", spec:"DMS202-3SB ST대구경 엘라 원터치버클"},
+  {no:93, name:"플라스틱체인", spec:"8MMX45M 형광연두 (롤)"},
+  {no:94, name:"칼라콘 주차금지", spec:"72X38X38"},
+  {no:95, name:"A형주차금지입간판", spec:"중형/무지 (450x800mm)"},
+  {no:96, name:"충전그라인더", spec:"DCG407N(배터리X,충전기X) 125mm(5"},
+  {no:97, name:"충전콤보세트", spec:"DCK2062P2(20V/5.0Ah) BL DCD709N+DCF809N"},
+  {no:98, name:"소켓어댑터", spec:"DW2547IRG 13mm(1/2"},
+  {no:99, name:"도금비트날", spec:"ASG-1426110M(6*110MM)"},
+  {no:100, name:"도금비트날", spec:"ASG-1426200M(6*200MM)"},
+  {no:101, name:"앵글선반", spec:"5단"},
+  {no:102, name:"사다리(다기능,LS형)", spec:"LS-5 (5단)"},
+  {no:103, name:"사다리보강대", spec:"LS사다리용(1SET=4EA)"},
+  {no:104, name:"포켓몽키(컬러그립)", spec:"SM-C10S (155mm)"},
+  {no:105, name:"해머드릴(경량)", spec:"GBH2-26"},
+  {no:106, name:"SDS PLUS-5X 4날 비트", spec:"13-260"},
+  {no:107, name:"SDS PLUS-5X 4날 비트", spec:"17-310"}
+],
+  미화: [
+  {no:1, name:"스파크 가루세제", spec:"1kg"},
+  {no:2, name:"고무장갑", spec:"선밴(분홍)"},
+  {no:3, name:"빗자루", spec:"삼각개량비"},
+  {no:4, name:"락스", spec:"유연 2L*6"},
+  {no:5, name:"경편(초극세사)", spec:"교체용걸레(초극세사)"},
+  {no:6, name:"마포대", spec:"알루미늄 마포대-특(1,500mm)"},
+  {no:7, name:"주방세제(대용량)", spec:"하이퐁12kg"},
+  {no:8, name:"플라스틱탈수기", spec:"핸드짤순이(대)"},
+  {no:9, name:"유리세정제", spec:"[DM리빙] 홈매직 유리세정제 700ml"},
+  {no:10, name:"집게", spec:"대(600mm)"},
+  {no:11, name:"헤라(경화형)", spec:"50mm (2"},
+  {no:12, name:"플라스틱 용기", spec:"만능용기(AL) 75L(뚜껑포함)"},
+  {no:13, name:"플라스틱 용기", spec:"운반구 75L"},
+  {no:14, name:"빗자루", spec:"갈대비(롱)"},
+  {no:15, name:"빗자루", spec:"대나무비 하품"},
+  {no:16, name:"점보롤", spec:"4묶음 1박스"},
+  {no:17, name:"알뜨랑비누", spec:"140g*3"},
+  {no:18, name:"무궁화 세탁비누/빨래비누", spec:"230g"},
+  {no:19, name:"수세미", spec:"다목적수세미(10매)-대"},
+  {no:20, name:"철수세미", spec:"40g"},
+  {no:21, name:"빗자루", spec:"수수장비"},
+  {no:22, name:"쓰레받기", spec:"외곽쓰레받기"},
+  {no:23, name:"속장갑", spec:"FREE"},
+  {no:24, name:"극세사 청소포", spec:"바둑크리너(40*60) 10P (블루)-중"},
+  {no:25, name:"SR끈", spec:"적색/대"},
+  {no:26, name:"세척제", spec:"파이씨스 PB-1(18L)"},
+  {no:27, name:"청소기(건습식)", spec:"KV-15SW (38mm)"},
+  {no:28, name:"페이퍼타올", spec:"박스"},
+  {no:29, name:"행주", spec:"다용도 부직포행주(3매)"},
+  {no:30, name:"화장지/휴지", spec:"두루마리/3겹/30개입"},
+  {no:31, name:"국민휴지통(와이드/푸쉬)", spec:"50L(그레이)"},
+  {no:32, name:"빗자루", spec:"마당비(중)"},
+  {no:33, name:"국민휴지통(사각/스윙)", spec:"25L(그레이)"},
+  {no:34, name:"패션장화", spec:"(여장화) 군청색"},
+  {no:35, name:"자루바가지", spec:""},
+  {no:36, name:"청소솔", spec:"통변기솔셋트"},
+  {no:37, name:"압축기", spec:"파워3중"},
+  {no:38, name:"압축기", spec:"파워피스톤"},
+  {no:39, name:"양동이", spec:"양동이 10L"},
+  {no:40, name:"막대걸레", spec:"KT 초극세사 밀대청소기(청)"},
+  {no:41, name:"청소포", spec:"KT 초극세사 밀대패드 1P"},
+  {no:42, name:"핸디유리창닦이", spec:"회전형"}
+]
+};
+
+const qty = {};
+
+function buildTable(sec) {
+  const items = ITEMS[sec];
+  let rows = items.map(it => {
+    const key = sec + '_' + it.no;
+    return `<tr>
+      <td>${it.no}</td>
+      <td><span>${it.name}</span>${it.spec ? '<span class="spec">'+it.spec+'</span>' : ''}</td>
+      <td><input type="number" class="qty-input" id="q_${key}" min="0" placeholder="0"
+        oninput="onQty('${key}',this)" onwheel="this.blur()"></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('section-' + sec).innerHTML =
+    `<table><thead><tr><th>No</th><th>품명 / 규격</th><th>수량</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function onQty(key, el) {
+  const v = parseInt(el.value) || 0;
+  if (v > 0) { qty[key] = v; el.classList.add('has-value'); }
+  else { delete qty[key]; el.classList.remove('has-value'); }
+  updateCount();
+}
+
+function updateCount() {
+  const total = Object.keys(qty).length;
+  document.getElementById('totalCount').textContent = total;
+  const byTab = {};
+  Object.keys(qty).forEach(k => {
+    const sec = k.split('_')[0];
+    byTab[sec] = (byTab[sec]||0) + 1;
+  });
+  ['용품','공기구','미화'].forEach(s => {
+    document.getElementById('badge-' + s).textContent = byTab[s] || 0;
+  });
+}
+
+function switchTab(sec) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const secs = ['용품','공기구','미화'];
+    t.classList.toggle('active', secs[i] === sec);
+  });
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-' + sec).classList.add('active');
+}
+
+function sendRequest() {
+  const apt = document.getElementById('aptName').value.trim();
+  if (!apt) { alert('아파트/단지명을 입력해 주세요.'); document.getElementById('aptName').focus(); return; }
+  if (Object.keys(qty).length === 0) { alert('수량을 입력한 품목이 없습니다.'); return; }
+
+  const lines = [];
+  ['용품','공기구','미화'].forEach(sec => {
+    const sName = {용품:'사무용품',공기구:'공기구',미화:'미화용품'}[sec];
+    const secItems = [];
+    ITEMS[sec].forEach(it => {
+      const key = sec + '_' + it.no;
+      if (qty[key]) secItems.push(`  ${it.no}. ${it.name}${it.spec?' ('+it.spec+')':''} × ${qty[key]}개`);
+    });
+    if (secItems.length) { lines.push('[' + sName + ']'); lines.push(...secItems); lines.push(''); }
+  });
+
+  const body = `견적 요청 - ${apt}\n\n` + lines.join('\n');
+  const subject = encodeURIComponent(`[견적요청] ${apt}`);
+  const bodyEnc = encodeURIComponent(body);
+
+  document.getElementById('btnSend').disabled = true;
+
+  // FormSubmit 방식
+  const form = document.createElement('form');
+  form.action = 'https://formsubmit.co/kanghyun0225@gmail.com';
+  form.method = 'POST';
+  form.style.display = 'none';
+
+  const fields = {
+    '_subject': `[견적요청] ${apt}`,
+    '_captcha': 'false',
+    '_template': 'table',
+    '_next': window.location.href + '?sent=1',
+    '아파트명': apt,
+    '견적내용': lines.join('\n')
+  };
+  Object.entries(fields).forEach(([k,v]) => {
+    const inp = document.createElement('input');
+    inp.name = k; inp.value = v;
+    form.appendChild(inp);
+  });
+  document.body.appendChild(form);
+
+  // Also open mailto as fallback
+  window.location.href = `mailto:kanghyun0225@gmail.com?subject=${subject}&body=${bodyEnc}`;
+
+  showModal('✅','전송 완료','견적 요청이 한스코퍼레이션으로 전달됐습니다.\n확인 후 빠르게 연락드리겠습니다.');
+}
+
+function showModal(icon, title, msg) {
+  document.getElementById('modalIcon').textContent = icon;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalMsg').innerHTML = msg.replace(/\n/g,'<br>');
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  document.getElementById('btnSend').disabled = false;
+}
+
+// Init
+['용품','공기구','미화'].forEach(buildTable);
+
+// Handle ?sent=1
+if (location.search.includes('sent=1')) {
+  showModal('✅','전송 완료','견적 요청이 전달됐습니다.\n확인 후 빠르게 연락드리겠습니다.');
+  history.replaceState(null,'',location.pathname);
+}
+</script>
+</body>
+</html>
