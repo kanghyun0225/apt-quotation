@@ -388,9 +388,9 @@ function buildTable(sec) {
       <td>${it.no}</td>
       <td>${imgHtml}<div class="item-info"><span>${it.name}</span>${it.spec ? '<span class="spec">'+it.spec+'</span>' : ''}</div></td>
       <td><div class="qty-stepper">
-        <button class="qty-btn" ontouchstart="changeQty('${key}',${-step})" onclick="changeQty('${key}',${-step})">−</button>
+        <button class="qty-btn" onclick="changeQty('${key}',${-step})">−</button>
         <div class="qty-val"><span id="q_${key}">0</span>${step>1?`<small>×${step}</small>`:''}</div>
-        <button class="qty-btn" ontouchstart="changeQty('${key}',${step})" onclick="changeQty('${key}',${step})">+</button>
+        <button class="qty-btn" onclick="changeQty('${key}',${step})">+</button>
       </div></td>
     </tr>`;
   }).join('');
