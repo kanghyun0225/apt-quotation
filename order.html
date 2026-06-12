@@ -21,15 +21,19 @@ table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;over
 th{background:#1e3a5f;color:#fff;padding:10px 8px;text-align:center;font-size:12px;font-weight:600}
 th:first-child{text-align:left;width:40px}
 th:nth-child(2){text-align:left}
-th:last-child{width:90px}
+th:last-child{width:110px}
 td{padding:8px;border-bottom:1px solid #f0f0f0;font-size:13px;vertical-align:middle}
 td:first-child{text-align:center;color:#aaa;font-size:12px}
 td:last-child{text-align:center}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#f7f9fc}
-.qty-input{width:70px;padding:5px 8px;border:1.5px solid #ccd6e0;border-radius:6px;text-align:center;font-size:14px;font-family:inherit}
-.qty-input:focus{outline:none;border-color:#1e3a5f;background:#f0f5ff}
-.qty-input.has-value{border-color:#2e7d32;background:#f1f8e9;font-weight:700}
+.qty-stepper{display:flex;align-items:center;justify-content:center;gap:0}
+.qty-btn{width:34px;height:34px;background:#1e3a5f;color:#fff;border:none;border-radius:6px;font-size:20px;font-weight:700;cursor:pointer;touch-action:manipulation;user-select:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.qty-btn:active{background:#2a4f82;transform:scale(.93)}
+.qty-val{min-width:38px;text-align:center;padding:0 4px}
+.qty-val span{display:block;font-size:15px;font-weight:700;color:#333;line-height:1.2}
+.qty-val span.has-value{color:#2e7d32}
+.qty-val small{display:block;font-size:9px;color:#aaa;margin-top:1px}
 .spec{font-size:11px;color:#999;display:block;margin-top:1px}
 .item-thumb{width:48px;height:48px;object-fit:contain;border:1px solid #eee;border-radius:4px;margin-right:8px;flex-shrink:0;vertical-align:middle}
 td:nth-child(2){display:flex;align-items:center;gap:0}
@@ -113,22 +117,22 @@ const ITEMS = {
   {no:13, name:"스테플러핀", spec:"33호 침(1통=10갑)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1129014-2.jpg"},
   {no:14, name:"계산기", spec:"MS-120FM (old.MS-120BM)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3209742-2-3.jpg"},
   {no:15, name:"정부화일", spec:"PP 정부화일 10매"},
-  {no:16, name:"클리어파일", spec:"20P컬러파일(보급형) 녹색 4322-3", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3229249-2-2.jpg"},
-  {no:17, name:"클리어파일", spec:"40P컬러파일(보급형) 분홍 4342-3", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3229249-2-2.jpg"},
-  {no:18, name:"클립통", spec:"원형자석클립통", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3392509-2-3.jpg"},
+  {no:16, name:"클리어파일", spec:"20P컬러파일(보급형) 녹색 4322-3", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3229249-2-2.jpg", moq:5},
+  {no:17, name:"클리어파일", spec:"40P컬러파일(보급형) 분홍 4342-3", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3229249-2-2.jpg", moq:5},
+  {no:18, name:"클립통", spec:"원형자석클립통", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3392509-2-3.jpg", moq:12},
   {no:19, name:"클립", spec:"600크립(1통=10갑)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1313421-2.jpg"},
   {no:20, name:"스프링화일", spec:"PP 상철"},
   {no:21, name:"스테플러", spec:"HD-2400 스테플러", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1284841-2-2.jpg"},
   {no:22, name:"스테플러핀", spec:"H-13(12MM) 1통=10갑", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1129014-2.jpg"},
   {no:23, name:"스테플러핀", spec:"H-13(24MM) 1통=10갑", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1129014-2.jpg"},
-  {no:24, name:"홀더파일", spec:"L홀더 백색 55L", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3229259-2-2.jpg"},
+  {no:24, name:"홀더파일", spec:"L홀더 백색 55L", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3229259-2-2.jpg", moq:10},
   {no:25, name:"유성매직", spec:"파랑", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1222657-2.jpg"},
   {no:26, name:"유성매직", spec:"빨강", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1222657-2.jpg"},
   {no:27, name:"유성매직", spec:"검정", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1222657-2.jpg"},
   {no:28, name:"보드마카", spec:"파랑", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1222635-2.jpg"},
   {no:29, name:"보드마카", spec:"검정", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1222635-2.jpg"},
   {no:30, name:"보드마카", spec:"빨강", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1222635-2.jpg"},
-  {no:31, name:"지우개", spec:"화이트보드용", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3371295-2-3.jpg"},
+  {no:31, name:"지우개", spec:"화이트보드용", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3371295-2-3.jpg", moq:20},
   {no:32, name:"네임펜", spec:"파랑", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3453156-2-3.jpg"},
   {no:33, name:"네임펜", spec:"빨강", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3453156-2-3.jpg"},
   {no:34, name:"네임펜", spec:"검정", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3453156-2-3.jpg"},
@@ -145,44 +149,44 @@ const ITEMS = {
   {no:45, name:"스타박스 컷팅자", spec:"20cm"},
   {no:46, name:"스타박스 컷팅자", spec:"30cm"},
   {no:47, name:"스타박스 컷팅자", spec:"50cm"},
-  {no:48, name:"커터칼", spec:"K-201", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3415866-2-3.jpg"},
-  {no:49, name:"커터칼", spec:"K-206", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3391705-2-3.jpg"},
+  {no:48, name:"커터칼", spec:"K-201", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3415866-2-3.jpg", moq:10},
+  {no:49, name:"커터칼", spec:"K-206", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3391705-2-3.jpg", moq:6},
   {no:50, name:"커터칼날", spec:"K-201B", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3423582-2-3.jpg"},
   {no:51, name:"커터칼날", spec:"K-214B", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3423583-2-3.jpg"},
   {no:52, name:"연필꽂이", spec:"WELL&GOOD 쿨그레이", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3248869-2-3.jpg"},
-  {no:53, name:"사무용가위", spec:"M-505", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3313617-2-3.JPG"},
+  {no:53, name:"사무용가위", spec:"M-505", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3313617-2-3.JPG", moq:10},
   {no:54, name:"M플래그/인덱스/지그재그", spec:"44*12mm/10매*9색/9+1세트"},
   {no:55, name:"포스트잇", spec:"디스펜서+팝업리필 C-4214(노랑)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3300028-2-2.JPG"},
   {no:56, name:"수정테이프", spec:"WH-605(5mm)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3398801-2-3.jpg"},
   {no:57, name:"수정테이프리필", spec:"WH-605R-2P(5mm)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1100752-2-3.jpg"},
-  {no:58, name:"제침기", spec:"겸용제침기", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3391630-2-3.jpg"},
+  {no:58, name:"제침기", spec:"겸용제침기", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3391630-2-3.jpg", moq:50},
   {no:59, name:"양면테이프", spec:"24*10 (1BOX/100EA)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3285119-2-3.jpg"},
   {no:60, name:"양면테이프", spec:"48*10 (1BOX/50EA)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3285119-2-3.jpg"},
-  {no:61, name:"면테이프(G)", spec:"녹색48*10", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3385897-2-3.jpg"},
-  {no:62, name:"OPP테이프", spec:"투명 48*40M (아크릴)55mic", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3285096-2-3.jpg"},
+  {no:61, name:"면테이프(G)", spec:"녹색48*10", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3385897-2-3.jpg", moq:50},
+  {no:62, name:"OPP테이프", spec:"투명 48*40M (아크릴)55mic", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3285096-2-3.jpg", moq:50},
   {no:63, name:"테이프커터기", spec:"자석테이프커터기"},
-  {no:64, name:"스카치테이프", spec:"581 다용도(18mmx15M)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3300057-2-2.JPG"},
-  {no:65, name:"스카치테이프", spec:"SH1825D 다용도(18mmx25M)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3300057-2-2.JPG"},
-  {no:66, name:"스카치테이프", spec:"810D 매직(18mmx30M)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3394232-2-3.jpg"},
-  {no:67, name:"결재판", spec:"결재바람(창무) 193", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3229273-2-2.jpg"},
-  {no:68, name:"더블클립", spec:"소(1갑=50개)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3292154-2-2.JPG"},
-  {no:69, name:"더블클립", spec:"중(1갑=50개)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3292154-2-2.JPG"},
-  {no:70, name:"더블클립", spec:"대(1갑=30개)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3292154-2-2.JPG"},
-  {no:71, name:"더블클립", spec:"특대(1갑=10개)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3292154-2-2.JPG"},
-  {no:72, name:"딱풀", spec:"투명풀16g", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3408650-2-3.jpg"},
+  {no:64, name:"스카치테이프", spec:"581 다용도(18mmx15M)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3300057-2-2.JPG", moq:12},
+  {no:65, name:"스카치테이프", spec:"SH1825D 다용도(18mmx25M)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3300057-2-2.JPG", moq:12},
+  {no:66, name:"스카치테이프", spec:"810D 매직(18mmx30M)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3394232-2-3.jpg", moq:10},
+  {no:67, name:"결재판", spec:"결재바람(창무) 193", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3229273-2-2.jpg", moq:5},
+  {no:68, name:"더블클립", spec:"소(1갑=50개)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3292154-2-2.JPG", moq:5},
+  {no:69, name:"더블클립", spec:"중(1갑=50개)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3292154-2-2.JPG", moq:5},
+  {no:70, name:"더블클립", spec:"대(1갑=30개)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3292154-2-2.JPG", moq:5},
+  {no:71, name:"더블클립", spec:"특대(1갑=10개)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3292154-2-2.JPG", moq:5},
+  {no:72, name:"딱풀", spec:"투명풀16g", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3408650-2-3.jpg", moq:12},
   {no:73, name:"애니라벨/V3240-100", spec:"100매/16칸/우편발송"},
   {no:74, name:"애니라벨/V3110-100", spec:"100매/1칸/화물물류관리용"},
   {no:75, name:"애니라벨/정부문서화일", spec:"2세트/20매"},
   {no:76, name:"희망 3공 D링바인더", spec:"A4/3공/7cm/흑색"},
   {no:77, name:"화일속지 고급형 / 1.25T", spec:"A4/20P"},
-  {no:78, name:"멀티책꽂이", spec:"3단-GR(335x208x213)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3248847-2-2.jpg"},
+  {no:78, name:"멀티책꽂이", spec:"3단-GR(335x208x213)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3248847-2-2.jpg", moq:2},
   {no:79, name:"디럭스칼라서류함", spec:"4단-GRAY(290x340x240)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3300486-2-2.JPG"},
   {no:80, name:"네오트레이", spec:"3단-GRAY(263x336x240)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3248891-2-2.jpg"},
   {no:81, name:"복사지", spec:"밀크 A4(80G)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3248384-2-3.bmp"},
   {no:82, name:"복사지", spec:"밀크 A3(75G)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3248384-2-3.bmp"},
   {no:83, name:"벽시계/저소음/MDF", spec:"대"},
   {no:84, name:"스탬프", spec:"흑색", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1313428-2-2.jpg"},
-  {no:85, name:"결재판", spec:"PS투명 클립보드 파랑 15-2", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3229273-2-2.jpg"},
+  {no:85, name:"결재판", spec:"PS투명 클립보드 파랑 15-2", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3229273-2-2.jpg", moq:5},
   {no:86, name:"구급함", spec:"스마트1호", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3238039-2-3.jpg"},
   {no:87, name:"종이컵관리기", spec:"자석 부착형 종이컵 디스펜서", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3411420-2-3.jpg"},
   {no:88, name:"종이컵관리기", spec:"종이컵 수거함", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3411420-2-3.jpg"},
@@ -196,8 +200,8 @@ const ITEMS = {
   {no:96, name:"멀티코드(차단스위치)", spec:"5구 16A x 3M (HDGM16-53)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3352492-2-3.jpg"},
   {no:97, name:"멀티코드(차단스위치)", spec:"5구 16A x 1.5M (HDGM16-52)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3352492-2-3.jpg"},
   {no:98, name:"전자호루라기", spec:"EW-01B(블랙)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3441168-2-3.jpg"},
-  {no:99, name:"신호봉", spec:"HN-50", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2318418-2.jpg"},
-  {no:100, name:"건전지(망간)", spec:"D(R20)(1판=2EA)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1239894-2-3.jpg"},
+  {no:99, name:"신호봉", spec:"HN-50", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2318418-2.jpg", moq:5},
+  {no:100, name:"건전지(망간)", spec:"D(R20)(1판=2EA)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1239894-2-3.jpg", moq:12},
   {no:101, name:"커팅매트", spec:"A3 네이비", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3380078-2-3.jpg"},
   {no:102, name:"커팅매트", spec:"A2 네이비", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3380078-2-3.jpg"},
   {no:103, name:"라벨프린터", spec:"LW-K200BL", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3308506-2-3.jpg"},
@@ -223,8 +227,8 @@ const ITEMS = {
   {no:3, name:"롱노우즈플라이어", spec:"150mm (6", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3273034-2-3.jpg"},
   {no:4, name:"테크트럭(무소음)", spec:"중", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3376937-2-3.jpg"},
   {no:5, name:"핸드카", spec:"SM-HC01S", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3380714-2-3.jpg"},
-  {no:6, name:"각삽", spec:"HS-AGS501", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3304853-2-2.JPG"},
-  {no:7, name:"막삽", spec:"HS-AMS503", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3304852-2-2.JPG"},
+  {no:6, name:"각삽", spec:"HS-AGS501", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3304853-2-2.JPG", moq:10},
+  {no:7, name:"막삽", spec:"HS-AMS503", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3304852-2-2.JPG", moq:10},
   {no:8, name:"공구함", spec:"SM-T402", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1238032-2.jpg"},
   {no:9, name:"공구가방", spec:"SB-3002", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1233839-2-3.jpg"},
   {no:10, name:"가스토치", spec:"ST-209", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3410657-2-3.jpg"},
@@ -233,7 +237,7 @@ const ITEMS = {
   {no:13, name:"사다리(광폭가정용)", spec:"IGW-03", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3407222-2-3.jpg"},
   {no:14, name:"사다리(A형)", spec:"MT-05 (5단)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1126495-2-3.jpg"},
   {no:15, name:"톱대", spec:"BL-7012", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1249324-2.jpg"},
-  {no:16, name:"톱날(HSS)", spec:"300mm (12", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1119476-2.jpg"},
+  {no:16, name:"톱날(HSS)", spec:"300mm (12", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1119476-2.jpg", moq:10},
   {no:17, name:"쥐꼬리톱", spec:"J-210", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3256979-2-2.jpg"},
   {no:18, name:"고무망치", spec:"SB-RH66 (24oz)"},
   {no:19, name:"빠루망치(TPR자루)", spec:"450g (16oz)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1297401-2-2.jpg"},
@@ -247,7 +251,7 @@ const ITEMS = {
   {no:27, name:"워터펌프플라이어", spec:"300mm (12"},
   {no:28, name:"다목적드릴비트세트", spec:"Promo-X line (33pcs)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1287834-2-3.jpg"},
   {no:29, name:"볼트커터ARM타입", spec:"SB-BC450 (18", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1200850-2-3.jpg"},
-  {no:30, name:"다목적가위", spec:"SM-MS8S", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1268628-2.jpg"},
+  {no:30, name:"다목적가위", spec:"SM-MS8S", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1268628-2.jpg", moq:10},
   {no:31, name:"양손가위(조경)", spec:"SB-800A", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1288543-2-3.jpg"},
   {no:32, name:"핫멜트건", spec:"GR-60 (40W)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1120375-2-2.jpg"},
   {no:33, name:"막대본드", spec:"SB-GS11 11￠*270 (1KG /백색) 35~37EA"},
@@ -255,16 +259,16 @@ const ITEMS = {
   {no:35, name:"니퍼", spec:"160mm (6", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3273006-2-3.jpg"},
   {no:36, name:"시계드라이버세트", spec:"SB-PS6SP", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3297947-2-3.JPG"},
   {no:37, name:"다가네드라이버", spec:"3800 8*200(-)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3407821-2-3.jpg"},
-  {no:38, name:"주먹양용드라이버", spec:"SB-PSD65", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1248462-2-3.jpg"},
+  {no:38, name:"주먹양용드라이버", spec:"SB-PSD65", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1248462-2-3.jpg", moq:12},
   {no:39, name:"전공양용드라이버", spec:"1100 (+)#2x(-)6-150", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1297285-2-3.JPG"},
-  {no:40, name:"절연테이프", spec:"검정 19*10M #170", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3415810-2-3.jpg"},
+  {no:40, name:"절연테이프", spec:"검정 19*10M #170", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3415810-2-3.jpg", moq:10},
   {no:41, name:"테프론테이프(보급형)", spec:"SMT-TT1"},
   {no:42, name:"구리스펌프(권총형)", spec:"SB-GG500P"},
   {no:43, name:"구리스(카트리지)", spec:"SB-CG400(400CC,SB-TGG500D포함 범용)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3340833-2-3.jpg"},
-  {no:44, name:"반코팅장갑", spec:"13G", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3340415-2-3.jpg"},
-  {no:45, name:"목장갑", spec:"60G(백색)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3340409-2-3.jpg"},
-  {no:46, name:"NBR폼코팅장갑", spec:"슈퍼그립200 회색L", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3213395-2-3.jpg"},
-  {no:47, name:"건전지(알카라인)", spec:"LR03(AAA) (1판=2EA)비닐포장", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1314780-2-3.jpg"},
+  {no:44, name:"반코팅장갑", spec:"13G", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3340415-2-3.jpg", moq:300},
+  {no:45, name:"목장갑", spec:"60G(백색)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3340409-2-3.jpg", moq:300},
+  {no:46, name:"NBR폼코팅장갑", spec:"슈퍼그립200 회색L", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3213395-2-3.jpg", moq:10},
+  {no:47, name:"건전지(알카라인)", spec:"LR03(AAA) (1판=2EA)비닐포장", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1314780-2-3.jpg", moq:24},
   {no:48, name:"건전지(알카라인)", spec:"LR6(AA) (1판=2EA)비닐포장", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1118345-2-2.jpg"},
   {no:49, name:"케이블타이", spec:"100mm 흑색(1000EA)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2301840-2-2.jpg"},
   {no:50, name:"케이블타이", spec:"140mm 흑색(1000EA)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2301840-2-2.jpg"},
@@ -278,21 +282,21 @@ const ITEMS = {
   {no:58, name:"직결피스(접시형)", spec:"8x13F 500EA", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3282460-2-2.JPG"},
   {no:59, name:"직결피스(접시형)", spec:"8x20F 500EA", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3282460-2-2.JPG"},
   {no:60, name:"직결피스(접시형)", spec:"8x32F 500EA", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3282460-2-2.JPG"},
-  {no:61, name:"실리콘건", spec:"SMC-101", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3349599-2-3.jpg"},
-  {no:62, name:"실리콘(무초산)", spec:"E-7000반투명 270ml", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2295830-2-2.jpg"},
-  {no:63, name:"순간접착제", spec:"401*20g Blister (459962)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3356930-2-3.jpg"},
-  {no:64, name:"윤활방청제", spec:"WD-40 360ml", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2261035-2-3.jpg"},
+  {no:61, name:"실리콘건", spec:"SMC-101", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3349599-2-3.jpg", moq:20},
+  {no:62, name:"실리콘(무초산)", spec:"E-7000반투명 270ml", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2295830-2-2.jpg", moq:25},
+  {no:63, name:"순간접착제", spec:"401*20g Blister (459962)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3356930-2-3.jpg", moq:10},
+  {no:64, name:"윤활방청제", spec:"WD-40 360ml", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2261035-2-3.jpg", moq:24},
   {no:65, name:"스티커 점착 제거제", spec:"IS-7510 420ml 스티커·타르제거제", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3224968-2-3.jpg"},
-  {no:66, name:"안전모", spec:"H101투구자동백색", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2200082-2-2.jpg"},
-  {no:67, name:"안전띠", spec:"위험테이프 백색", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3329467-2-3.jpg"},
+  {no:66, name:"안전모", spec:"H101투구자동백색", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2200082-2-2.jpg", moq:10},
+  {no:67, name:"안전띠", spec:"위험테이프 백색", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3329467-2-3.jpg", moq:5},
   {no:68, name:"스프레이접착제", spec:"#77 455ML (16oz)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2309367-2-3.jpg"},
   {no:69, name:"하이스드릴세트", spec:"13본조", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3244236-2-2.jpg"},
-  {no:70, name:"콘크리트드릴", spec:"3.0MM", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1220690-2.jpg"},
-  {no:71, name:"콘크리트드릴", spec:"6.0MM", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1220690-2.jpg"},
-  {no:72, name:"콘크리트드릴", spec:"6.5MM", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1220690-2.jpg"},
+  {no:70, name:"콘크리트드릴", spec:"3.0MM", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1220690-2.jpg", moq:10},
+  {no:71, name:"콘크리트드릴", spec:"6.0MM", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1220690-2.jpg", moq:10},
+  {no:72, name:"콘크리트드릴", spec:"6.5MM", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1220690-2.jpg", moq:10},
   {no:73, name:"알루미늄자석수평", spec:"300mm (12", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1249695-2-2.jpg"},
-  {no:74, name:"이지스트리퍼", spec:"SB-661T", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1130738-2.jpg"},
-  {no:75, name:"절단석", spec:"4 (WPSG FUSION PN1994, 100mm)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3412140-2-3.jpg"},
+  {no:74, name:"이지스트리퍼", spec:"SB-661T", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1130738-2.jpg", moq:10},
+  {no:75, name:"절단석", spec:"4 (WPSG FUSION PN1994, 100mm)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3412140-2-3.jpg", moq:50},
   {no:76, name:"보안경", spec:"OX1000", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/2307482-2.jpg"},
   {no:77, name:"디지털테스터(포켓)", spec:"SH-3230 (=ST3230)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1257961-2.jpg"},
   {no:78, name:"모듈러압착기", spec:"SB-568", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/1205963-2.jpg"},
@@ -329,26 +333,26 @@ const ITEMS = {
   미화: [
   {no:1, name:"스파크 가루세제", spec:"1kg"},
   {no:2, name:"고무장갑", spec:"선밴(분홍)"},
-  {no:3, name:"빗자루", spec:"삼각개량비", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3419564-2-3.jpg"},
+  {no:3, name:"빗자루", spec:"삼각개량비", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3419564-2-3.jpg", moq:10},
   {no:4, name:"락스", spec:"유연 2L*6"},
-  {no:5, name:"경편(초극세사)", spec:"교체용걸레(초극세사)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3378299-2-3.jpg"},
-  {no:6, name:"마포대", spec:"알루미늄 마포대-특(1,500mm)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346448-2-3.jpg"},
+  {no:5, name:"경편(초극세사)", spec:"교체용걸레(초극세사)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3378299-2-3.jpg", moq:10},
+  {no:6, name:"마포대", spec:"알루미늄 마포대-특(1,500mm)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346448-2-3.jpg", moq:10},
   {no:7, name:"주방세제(대용량)", spec:"하이퐁12kg"},
   {no:8, name:"플라스틱탈수기", spec:"핸드짤순이(대)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3292442-2-2.jpg"},
-  {no:9, name:"유리세정제", spec:"[DM리빙] 홈매직 유리세정제 700ml", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3417362-2-3.jpg"},
-  {no:10, name:"집게", spec:"대(600mm)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346457-2-3.jpg"},
+  {no:9, name:"유리세정제", spec:"[DM리빙] 홈매직 유리세정제 700ml", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3417362-2-3.jpg", moq:12},
+  {no:10, name:"집게", spec:"대(600mm)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346457-2-3.jpg", moq:20},
   {no:11, name:"헤라(경화형)", spec:"50mm (2"},
-  {no:12, name:"플라스틱 용기", spec:"만능용기(AL) 75L(뚜껑포함)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3339398-2-3.jpg"},
-  {no:13, name:"플라스틱 용기", spec:"운반구 75L", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3339398-2-3.jpg"},
-  {no:14, name:"빗자루", spec:"갈대비(롱)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346425-2-3.jpg"},
-  {no:15, name:"빗자루", spec:"대나무비 하품", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346425-2-3.jpg"},
+  {no:12, name:"플라스틱 용기", spec:"만능용기(AL) 75L(뚜껑포함)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3339398-2-3.jpg", moq:3},
+  {no:13, name:"플라스틱 용기", spec:"운반구 75L", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3339398-2-3.jpg", moq:3},
+  {no:14, name:"빗자루", spec:"갈대비(롱)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346425-2-3.jpg", moq:10},
+  {no:15, name:"빗자루", spec:"대나무비 하품", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346425-2-3.jpg", moq:10},
   {no:16, name:"점보롤", spec:"4묶음 1박스"},
   {no:17, name:"알뜨랑비누", spec:"140g*3"},
   {no:18, name:"무궁화 세탁비누/빨래비누", spec:"230g"},
   {no:19, name:"수세미", spec:"다목적수세미(10매)-대", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3314654-2-3.jpg"},
   {no:20, name:"철수세미", spec:"40g"},
-  {no:21, name:"빗자루", spec:"수수장비", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346425-2-3.jpg"},
-  {no:22, name:"쓰레받기", spec:"외곽쓰레받기", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3363115-2-3.jpg"},
+  {no:21, name:"빗자루", spec:"수수장비", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346425-2-3.jpg", moq:10},
+  {no:22, name:"쓰레받기", spec:"외곽쓰레받기", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3363115-2-3.jpg", moq:5},
   {no:23, name:"속장갑", spec:"FREE", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3363971-2-3.jpg"},
   {no:24, name:"극세사 청소포", spec:"바둑크리너(40*60) 10P (블루)-중", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3372744-2-3.JPG"},
   {no:25, name:"SR끈", spec:"적색/대"},
@@ -358,17 +362,17 @@ const ITEMS = {
   {no:29, name:"행주", spec:"다용도 부직포행주(3매)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3355788-2-3.jpg"},
   {no:30, name:"화장지/휴지", spec:"두루마리/3겹/30개입"},
   {no:31, name:"국민휴지통(와이드/푸쉬)", spec:"50L(그레이)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3279591-2-3.jpg"},
-  {no:32, name:"빗자루", spec:"마당비(중)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346425-2-3.jpg"},
+  {no:32, name:"빗자루", spec:"마당비(중)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3346425-2-3.jpg", moq:10},
   {no:33, name:"국민휴지통(사각/스윙)", spec:"25L(그레이)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3279577-2-3.jpg"},
   {no:34, name:"패션장화", spec:"(여장화) 군청색", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3265195-2-2.jpg"},
   {no:35, name:"자루바가지", spec:""},
-  {no:36, name:"청소솔", spec:"통변기솔셋트", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3419656-2-3.jpg"},
+  {no:36, name:"청소솔", spec:"통변기솔셋트", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3419656-2-3.jpg", moq:10},
   {no:37, name:"압축기", spec:"파워3중", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3280054-2-2.JPG"},
   {no:38, name:"압축기", spec:"파워피스톤", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3280054-2-2.JPG"},
   {no:39, name:"양동이", spec:"양동이 10L", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3420622-2-3.jpg"},
   {no:40, name:"막대걸레", spec:"KT 초극세사 밀대청소기(청)", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3416731-2-3.jpg"},
-  {no:41, name:"청소포", spec:"KT 초극세사 밀대패드 1P", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3416739-2-3.jpg"},
-  {no:42, name:"핸디유리창닦이", spec:"회전형", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3428526-2-3.jpg"}
+  {no:41, name:"청소포", spec:"KT 초극세사 밀대패드 1P", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3416739-2-3.jpg", moq:10},
+  {no:42, name:"핸디유리창닦이", spec:"회전형", img:"https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/3428526-2-3.jpg", moq:10}
 ]
 };
 
@@ -378,21 +382,28 @@ function buildTable(sec) {
   const items = ITEMS[sec];
   let rows = items.map(it => {
     const key = sec + '_' + it.no;
+    const step = it.moq || 1;
     const imgHtml = it.img ? `<img src="${it.img}" class="item-thumb" onerror="this.style.display='none'">` : '';
     return `<tr>
       <td>${it.no}</td>
       <td>${imgHtml}<div class="item-info"><span>${it.name}</span>${it.spec ? '<span class="spec">'+it.spec+'</span>' : ''}</div></td>
-      <td><input type="number" class="qty-input" id="q_${key}" min="0" placeholder="0"
-        oninput="onQty('${key}',this)" onwheel="this.blur()"></td>
+      <td><div class="qty-stepper">
+        <button class="qty-btn" ontouchstart="changeQty('${key}',${-step})" onclick="changeQty('${key}',${-step})">−</button>
+        <div class="qty-val"><span id="q_${key}">0</span>${step>1?`<small>×${step}</small>`:''}</div>
+        <button class="qty-btn" ontouchstart="changeQty('${key}',${step})" onclick="changeQty('${key}',${step})">+</button>
+      </div></td>
     </tr>`;
   }).join('');
   document.getElementById('section-' + sec).innerHTML =
     `<table><thead><tr><th>No</th><th>품명 / 규격</th><th>수량</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-function onQty(key, el) {
-  const v = parseInt(el.value) || 0;
-  if (v > 0) { qty[key] = v; el.classList.add('has-value'); }
+function changeQty(key, delta) {
+  const el = document.getElementById('q_' + key);
+  const cur = parseInt(el.textContent) || 0;
+  const nv = Math.max(0, cur + delta);
+  el.textContent = nv;
+  if (nv > 0) { qty[key] = nv; el.classList.add('has-value'); }
   else { delete qty[key]; el.classList.remove('has-value'); }
   updateCount();
 }
