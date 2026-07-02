@@ -264,6 +264,14 @@ const IMG_BASE = 'https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/';
 const ORDER_EMAIL = 'kanghyun0225@gmail.com';
 const PAGE_SIZE = 48;
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  ▶ 마진율 설정 (여기만 수정하세요)
+const MARGIN_RATE = 0.30; // 30% → 0.25 = 25%, 0.35 = 35%
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// 크레텍 원가 → 판매가 변환 (고객에게는 이 값만 노출)
+function mp(raw) { return raw ? Math.round(raw * (1 + MARGIN_RATE)) : 0; }
+
 let DB = null;         // { cats, brands, items, namesLower, brandsLower, catsLower, codeMap }
 let filtered = [];
 let page = 0;
@@ -422,7 +430,8 @@ function buildCard(item) {
   const cat = DB.cats[item[6]];
   const inCart = !!cart[code];
   const qty = inCart ? cart[code].qty : 0;
-  const priceStr = price ? '₩' + price.toLocaleString() : '가격문의';
+  const displayPrice = mp(price);
+  const priceStr = displayPrice ? '₩' + displayPrice.toLocaleString() : '가격문의';
   const errImg = `this.onerror=null;this.src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="%23f0f0f0"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="%23bbb">No Image</text></svg>'`;
 
   const div = document.createElement('div');
@@ -541,7 +550,7 @@ function renderCart() {
   const errImg = `this.onerror=null;this.src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><rect width="60" height="60" fill="%23f0f0f0"/></svg>'`;
   const list = $('cartList');
   list.innerHTML = items.map(([code, {item, qty}]) => {
-    const price = item[3];
+    const price = mp(item[3]);
     const subtotal = price * qty;
     return `<div class="citem" data-code="${code}">
       <img class="citem-img" src="${IMG_BASE}${item[5]}-2-3.jpg" alt="${item[1]}" loading="lazy" onerror="${errImg}">
@@ -563,7 +572,7 @@ function renderCart() {
   }).join('');
 
   // Total
-  const totalAmt = items.reduce((s, [, {item, qty}]) => s + (item[3]||0) * qty, 0);
+  const totalAmt = items.reduce((s, [, {item, qty}]) => s + mp(item[3]||0) * qty, 0);
   const totalQty = items.reduce((s, [, {qty}]) => s + qty, 0);
   $('cartTotal').innerHTML = `
     <div class="ct-row"><span>총 상품 수</span><span>${items.length}개 품목 · ${totalQty}개</span></div>
@@ -622,7 +631,7 @@ function downloadExcel() {
 
   let totalAmt = 0;
   items.forEach(({item, qty}, idx) => {
-    const price = item[3] || 0;
+    const price = mp(item[3] || 0);
     const amount = price * qty;
     totalAmt += amount;
     aoa.push([idx+1, item[0], item[1], DB.brands[item[2]], price, qty, amount, item[4]]);
@@ -660,7 +669,7 @@ function sendEmail() {
   const person  = $('inputPerson').value.trim()  || '-';
   const phone   = $('inputPhone').value.trim()   || '-';
   const today   = new Date().toLocaleDateString('ko-KR');
-  const totalAmt = items.reduce((s, {item, qty}) => s + (item[3]||0) * qty, 0);
+  const totalAmt = items.reduce((s, {item, qty}) => s + mp(item[3]||0) * qty, 0);
 
   const subject = `[주문] ${company} - ${today}`;
 
@@ -674,8 +683,8 @@ function sendEmail() {
   // Limit to first 30 items to keep URL reasonable
   const MAX_MAIL_ITEMS = 30;
   items.slice(0, MAX_MAIL_ITEMS).forEach(({item, qty}, i) => {
-    const price = item[3] ? item[3].toLocaleString() : '문의';
-    const amt = item[3] ? (item[3]*qty).toLocaleString() : '-';
+    const price = item[3] ? mp(item[3]).toLocaleString() : '문의';
+    const amt = item[3] ? (mp(item[3])*qty).toLocaleString() : '-';
     body += `${i+1}. [${item[0]}] ${item[1]} | ₩${price} × ${qty}개 = ₩${amt}\n`;
   });
   if (items.length > MAX_MAIL_ITEMS) {
