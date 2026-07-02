@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>크레텍 상품 주문 - 한스코퍼레이션</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1e3a5f;--primary-light:#2a4f82;--accent:#e8640d;
+  --bg:#f0f2f5;--card:#fff;--text:#333;--muted:#888;
+  --border:#e0e0e0;--green:#2e7d32;
+}
+body{font-family:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+/* ── Loading ── */
+#loading{position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+#loading.hide{display:none}
+.spinner{width:40px;height:40px;border:4px solid #e0e0e0;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loadingMsg{font-size:14px;color:var(--muted)}
+#loadingPct{font-size:20px;font-weight:700;color:var(--primary)}
+
+/* ── Header ── */
+.header{background:var(--primary);color:#fff;padding:14px 16px}
+.header-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.header-logo{font-size:22px}
+.header-title{font-size:17px;font-weight:700}
+.header-sub{font-size:11px;opacity:.75;margin-top:2px}
+
+/* ── Tabs ── */
+.tabs{background:var(--card);border-bottom:2px solid var(--primary);display:flex;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.tab{flex:1;padding:12px 4px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;transition:.2s;user-select:none}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.badge{display:inline-block;background:#ddd;color:#666;border-radius:10px;font-size:11px;padding:1px 7px;margin-left:3px;min-width:20px;text-align:center;transition:.2s}
+.badge.has{background:var(--accent);color:#fff}
+
+/* ── Sections ── */
+.section{display:none}.section.active{display:block}
+
+/* ── Search Bar ── */
+.search-bar{background:var(--card);padding:10px 12px;border-bottom:1px solid var(--border);position:sticky;top:46px;z-index:99}
+.search-wrap{position:relative}
+#searchInput{width:100%;padding:9px 38px 9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+#searchInput:focus{border-color:var(--primary)}
+.search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;color:#bbb;display:none;line-height:1;padding:2px}
+.filter-row{display:flex;gap:8px;margin-top:8px}
+#catSelect{flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:#fff;outline:none;color:var(--text)}
+#catSelect:focus{border-color:var(--primary)}
+.btn-filter-clear{padding:7px 12px;background:#f5f5f5;border:1.5px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;color:var(--muted);white-space:nowrap;font-family:inherit}
+.btn-filter-clear:active{background:#e8e8e8}
+
+/* ── Results Info ── */
+.results-info{padding:7px 12px;font-size:12px;color:var(--muted);background:var(--bg)}
+
+/* ── Product Grid ── */
+.product-grid{padding:8px 10px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:540px){.product-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:800px){.product-grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:1100px){.product-grid{grid-template-columns:repeat(5,1fr)}}
+
+/* ── Product Card ── */
+.pcard{background:var(--card);border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden;display:flex;flex-direction:column}
+.pcard-img-wrap{aspect-ratio:1;background:#f8f8f8;overflow:hidden}
+.pcard-img{width:100%;height:100%;object-fit:contain;padding:6px}
+.pcard-body{padding:8px;flex:1;display:flex;flex-direction:column;gap:2px}
+.pcard-cat{font-size:10px;color:var(--muted)}
+.pcard-name{font-size:12px;font-weight:600;line-height:1.4;flex:1}
+.pcard-brand{font-size:11px;color:var(--muted)}
+.pcard-price{font-size:14px;font-weight:700;color:var(--primary);margin-top:2px}
+.pcard-unit{font-size:10px;color:var(--muted)}
+.pcard-foot{padding:0 8px 8px}
+.qty-row{display:flex;align-items:center;justify-content:space-between;margin-top:6px;gap:2px}
+.qty-btn{width:32px;height:32px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent;line-height:1}
+.qty-btn:active{background:var(--primary-light);transform:scale(.9)}
+.qty-inp{width:48px;text-align:center;border:1.5px solid var(--border);border-radius:6px;padding:5px 0;font-size:14px;font-weight:700;font-family:inherit;outline:none}
+.qty-inp:focus{border-color:var(--primary)}
+.qty-inp.on{border-color:var(--green);color:var(--green)}
+.btn-add{width:100%;margin-top:6px;padding:7px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}
+.btn-add:active{background:var(--primary-light)}
+.btn-add.added{background:var(--green)}
+
+/* ── Load More ── */
+.load-more-wrap{padding:14px;text-align:center;display:none}
+.btn-load-more{padding:10px 28px;background:#fff;border:1.5px solid var(--primary);color:var(--primary);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-load-more:hover{background:var(--primary);color:#fff}
+.load-more-info{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* ── No Results ── */
+.no-results{text-align:center;padding:48px 20px;color:var(--muted);font-size:14px}
+.no-results-icon{font-size:40px;margin-bottom:10px}
+
+/* ── Cart Section ── */
+.cart-wrap{padding:12px;max-width:700px;margin:0 auto}
+.cart-empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.cart-empty-icon{font-size:52px;margin-bottom:14px}
+.cart-empty p{margin-bottom:16px;font-size:15px}
+.btn-go-search{background:var(--primary);color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+
+/* ── Order Form ── */
+.order-form{background:var(--card);border-radius:10px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.order-form h3{font-size:15px;color:var(--primary);margin-bottom:14px;font-weight:700;display:flex;align-items:center;gap:6px}
+.form-group{margin-bottom:10px}
+.form-group:last-child{margin-bottom:0}
+.form-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.form-group input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+.form-group input:focus{border-color:var(--primary)}
+
+/* ── Cart Item ── */
+.cart-list{margin-bottom:12px}
+.citem{background:var(--card);border-radius:10px;padding:12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.07);display:flex;gap:10px;align-items:flex-start}
+.citem-img{width:60px;height:60px;object-fit:contain;border:1px solid #eee;border-radius:6px;flex-shrink:0}
+.citem-info{flex:1;min-width:0}
+.citem-name{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:2px}
+.citem-brand{font-size:11px;color:var(--muted);margin-bottom:4px}
+.citem-price-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.citem-price{font-size:13px;color:var(--primary);font-weight:600}
+.citem-subtotal{font-size:12px;color:var(--muted)}
+.citem-controls{display:flex;align-items:center;gap:6px;margin-top:6px}
+.cqty-btn{width:28px;height:28px;background:var(--primary);color:#fff;border:none;border-radius:5px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+.cqty-btn:active{background:var(--primary-light)}
+.cqty-val{font-size:15px;font-weight:700;min-width:28px;text-align:center}
+.citem-del{background:none;border:none;cursor:pointer;font-size:20px;color:#dc3545;padding:2px;margin-left:auto;flex-shrink:0;line-height:1}
+
+/* ── Cart Total ── */
+.cart-total{background:var(--card);border-radius:10px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.ct-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:6px}
+.ct-row:last-child{margin:0;font-weight:700;font-size:16px;color:var(--primary);padding-top:10px;border-top:1px solid var(--border)}
+
+/* ── Action Buttons ── */
+.action-btns{display:flex;flex-direction:column;gap:10px;padding-bottom:40px}
+.btn-xl{width:100%;padding:15px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s}
+.btn-excel{background:#217346;color:#fff}
+.btn-excel:active{background:#1a5c38}
+.btn-email{background:var(--primary);color:#fff}
+.btn-email:active{background:var(--primary-light)}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(20,30,50,.88);color:#fff;padding:9px 20px;border-radius:20px;font-size:13px;opacity:0;transition:all .3s;z-index:500;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── Float Cart ── */
+.float-cart{position:fixed;bottom:18px;right:14px;background:var(--primary);color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(30,58,95,.45);z-index:300;display:none;align-items:center;gap:7px;font-family:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.float-cart.visible{display:flex}
+.float-cart:active{transform:scale(.95)}
+.float-badge{background:var(--accent);color:#fff;border-radius:10px;font-size:12px;padding:1px 7px}
+
+/* ── Responsive ── */
+@media(max-width:360px){.pcard-name{font-size:11px}.pcard-price{font-size:13px}}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="spinner"></div>
+  <div id="loadingPct">0%</div>
+  <div id="loadingMsg">상품 데이터를 불러오는 중...</div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-logo">🏢</div>
+    <div>
+      <div class="header-title">크레텍 상품 주문</div>
+      <div class="header-sub">한스코퍼레이션 | 아파트 관리사무소 전용</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('search')">🔍 상품 검색 <span class="badge" id="searchBadge">86,386</span></div>
+  <div class="tab" onclick="switchTab('cart')">🛒 장바구니 <span class="badge" id="cartBadge">0</span></div>
+</div>
+
+<!-- ===== Search Section ===== -->
+<div id="sec-search" class="section active">
+  <div class="search-bar">
+    <div class="search-wrap">
+      <input id="searchInput" type="search" placeholder="상품명, 브랜드, 카테고리 검색..." autocomplete="off" oninput="onSearch()">
+      <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+    </div>
+    <div class="filter-row">
+      <select id="catSelect" onchange="applyFilter()">
+        <option value="">전체 카테고리 (1,745개)</option>
+      </select>
+      <button class="btn-filter-clear" onclick="clearFilter()">초기화</button>
+    </div>
+  </div>
+  <div class="results-info" id="resultsInfo">데이터 로딩 중...</div>
+  <div class="product-grid" id="productGrid"></div>
+  <div class="load-more-wrap" id="loadMoreWrap">
+    <button class="btn-load-more" onclick="loadMore()">더 보기</button>
+    <div class="load-more-info" id="loadMoreInfo"></div>
+  </div>
+  <div style="height:80px"></div>
+</div>
+
+<!-- ===== Cart Section ===== -->
+<div id="sec-cart" class="section">
+  <div class="cart-wrap">
+    <!-- Empty state -->
+    <div class="cart-empty" id="cartEmpty">
+      <div class="cart-empty-icon">🛒</div>
+      <p>장바구니가 비어 있습니다</p>
+      <button class="btn-go-search" onclick="switchTab('search')">상품 검색하기</button>
+    </div>
+
+    <!-- Cart content (hidden when empty) -->
+    <div id="cartContent" style="display:none">
+      <!-- Order Form -->
+      <div class="order-form">
+        <h3>📋 주문 정보</h3>
+        <div class="form-group">
+          <label>아파트/회사명 <span style="color:#dc3545">*</span></label>
+          <input id="inputCompany" type="text" placeholder="예) 힐스테이트 ○○○ 관리사무소">
+        </div>
+        <div class="form-group">
+          <label>담당자</label>
+          <input id="inputPerson" type="text" placeholder="담당자 성명">
+        </div>
+        <div class="form-group">
+          <label>연락처</label>
+          <input id="inputPhone" type="tel" placeholder="010-0000-0000">
+        </div>
+      </div>
+
+      <!-- Cart Items -->
+      <div class="cart-list" id="cartList"></div>
+
+      <!-- Cart Total -->
+      <div class="cart-total" id="cartTotal"></div>
+
+      <!-- Action Buttons -->
+      <div class="action-btns">
+        <button class="btn-xl btn-excel" onclick="downloadExcel()">
+          📊 엑셀 주문서 다운로드
+        </button>
+        <button class="btn-xl btn-email" onclick="sendEmail()">
+          📨 이메일로 주문 보내기
+        </button>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:-4px">
+          kanghyun0225@gmail.com 으로 주문 내역이 전송됩니다
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Float cart button (visible in search tab) -->
+<button class="float-cart" id="floatCart" onclick="switchTab('cart')">
+  🛒 <span id="floatCartTxt">장바구니</span>
+  <span class="float-badge" id="floatBadge">0</span>
+</button>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const IMG_BASE = 'https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/';
+const ORDER_EMAIL = 'kanghyun0225@gmail.com';
+const PAGE_SIZE = 48;
+
+let DB = null;         // { cats, brands, items, namesLower, brandsLower, catsLower, codeMap }
+let filtered = [];
+let page = 0;
+let cart = {};         // code -> { item, qty }
+let activeTab = 'search';
+let searchDebounce = null;
+
+const $ = id => document.getElementById(id);
+
+// ─────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────
+async function init() {
+  try {
+    const res = await fetch('./cretec_lite.json');
+    const total = parseInt(res.headers.get('Content-Length') || '0');
+    const reader = res.body.getReader();
+    let received = 0;
+    const chunks = [];
+    while(true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+      if (total > 0) {
+        $('loadingPct').textContent = Math.round(received / total * 100) + '%';
+      }
+    }
+    const blob = new Blob(chunks);
+    const text = await blob.text();
+    $('loadingMsg').textContent = '데이터 처리 중...';
+    $('loadingPct').textContent = '⚙️';
+
+    // Use setTimeout so the UI updates before heavy parsing
+    setTimeout(() => {
+      try {
+        DB = JSON.parse(text);
+        buildIndex();
+        buildCatSelect();
+        applyFilter();
+        $('loading').classList.add('hide');
+        updateCartBadge();
+      } catch(e) {
+        showLoadError('데이터 파싱 실패: ' + e.message);
+      }
+    }, 50);
+  } catch(e) {
+    showLoadError('데이터 로딩 실패. 새로고침 해주세요.<br><small>' + e.message + '</small>');
+  }
+}
+
+function buildIndex() {
+  DB.namesLower = DB.items.map(item => item[1].toLowerCase());
+  DB.brandsLower = DB.brands.map(b => b.toLowerCase());
+  DB.catsLower = DB.cats.map(c => c.toLowerCase());
+  DB.codeMap = {};
+  DB.items.forEach(item => { DB.codeMap[item[0]] = item; });
+}
+
+function buildCatSelect() {
+  const sel = $('catSelect');
+  const html = DB.cats.map((cat, i) => `<option value="${i}">${cat}</option>`).join('');
+  sel.innerHTML = `<option value="">전체 카테고리 (${DB.cats.length.toLocaleString()}개)</option>` + html;
+}
+
+function showLoadError(msg) {
+  $('loadingPct').textContent = '❌';
+  $('loadingMsg').innerHTML = msg;
+}
+
+// ─────────────────────────────────────────────
+// Search & Filter
+// ─────────────────────────────────────────────
+function onSearch() {
+  const val = $('searchInput').value;
+  $('searchClear').style.display = val ? 'block' : 'none';
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(applyFilter, 280);
+}
+
+function clearSearch() {
+  $('searchInput').value = '';
+  $('searchClear').style.display = 'none';
+  applyFilter();
+}
+
+function clearFilter() {
+  $('searchInput').value = '';
+  $('catSelect').value = '';
+  $('searchClear').style.display = 'none';
+  applyFilter();
+}
+
+function applyFilter() {
+  if (!DB) return;
+  const term = $('searchInput').value.trim().toLowerCase();
+  const catVal = $('catSelect').value;
+  const catIdx = catVal === '' ? -1 : parseInt(catVal);
+
+  filtered = DB.items.filter((item, i) => {
+    if (catIdx >= 0 && item[6] !== catIdx) return false;
+    if (term) {
+      return DB.namesLower[i].includes(term) ||
+             DB.brandsLower[item[2]].includes(term) ||
+             DB.catsLower[item[6]].includes(term);
+    }
+    return true;
+  });
+
+  page = 0;
+  $('productGrid').innerHTML = '';
+  renderProducts();
+  $('searchBadge').textContent = filtered.length.toLocaleString();
+}
+
+// ─────────────────────────────────────────────
+// Product Rendering
+// ─────────────────────────────────────────────
+function renderProducts() {
+  const grid = $('productGrid');
+  const start = page * PAGE_SIZE;
+  const end = Math.min(start + PAGE_SIZE, filtered.length);
+
+  $('resultsInfo').textContent = filtered.length.toLocaleString() + '개 상품';
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="no-results" style="grid-column:1/-1">
+      <div class="no-results-icon">🔍</div>검색 결과가 없습니다
+    </div>`;
+    $('loadMoreWrap').style.display = 'none';
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  for (let i = start; i < end; i++) {
+    frag.appendChild(buildCard(filtered[i]));
+  }
+  grid.appendChild(frag);
+  page++;
+
+  const hasMore = page * PAGE_SIZE < filtered.length;
+  $('loadMoreWrap').style.display = hasMore ? 'block' : 'none';
+  if (hasMore) {
+    $('loadMoreInfo').textContent = `${Math.min(page * PAGE_SIZE, filtered.length).toLocaleString()} / ${filtered.length.toLocaleString()}개 표시 중`;
+  }
+}
+
+function loadMore() {
+  renderProducts();
+}
+
+function buildCard(item) {
+  const code = item[0], name = item[1];
+  const brand = DB.brands[item[2]];
+  const price = item[3], unit = item[4], imgId = item[5];
+  const cat = DB.cats[item[6]];
+  const inCart = !!cart[code];
+  const qty = inCart ? cart[code].qty : 0;
+  const priceStr = price ? '₩' + price.toLocaleString() : '가격문의';
+  const errImg = `this.onerror=null;this.src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="%23f0f0f0"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="%23bbb">No Image</text></svg>'`;
+
+  const div = document.createElement('div');
+  div.className = 'pcard';
+  div.dataset.code = code;
+  div.innerHTML = `
+    <div class="pcard-img-wrap">
+      <img class="pcard-img" src="${IMG_BASE}${imgId}-2-3.jpg" loading="lazy" alt="${name}" onerror="${errImg}">
+    </div>
+    <div class="pcard-body">
+      <div class="pcard-cat">${cat}</div>
+      <div class="pcard-name">${name}</div>
+      <div class="pcard-brand">${brand}</div>
+      <div class="pcard-price">${priceStr}</div>
+      <div class="pcard-unit">${unit}</div>
+    </div>
+    <div class="pcard-foot">
+      <div class="qty-row">
+        <button class="qty-btn" onclick="cardQtyDelta('${esc(code)}',-1,this)">−</button>
+        <input class="qty-inp${qty>0?' on':''}" type="number" min="0" value="${qty||''}" placeholder="0"
+               onchange="cardQtySet('${esc(code)}',this)" onfocus="this.select()" data-code="${esc(code)}">
+        <button class="qty-btn" onclick="cardQtyDelta('${esc(code)}',1,this)">+</button>
+      </div>
+      <button class="btn-add${inCart?' added':''}" onclick="cardAddBtn('${esc(code)}',this)">
+        ${inCart?'✓ 담겼음':'🛒 담기'}
+      </button>
+    </div>`;
+  return div;
+}
+
+function esc(s) { return s.replace(/'/g,"\\'"); }
+
+// ─────────────────────────────────────────────
+// Card Qty Controls
+// ─────────────────────────────────────────────
+function cardQtyDelta(code, delta, btn) {
+  const card = btn.closest('.pcard');
+  const inp = card.querySelector('.qty-inp');
+  let val = Math.max(0, (parseInt(inp.value)||0) + delta);
+  inp.value = val || '';
+  inp.className = 'qty-inp' + (val>0?' on':'');
+  if (val > 0) setCart(code, val); else removeFromCart(code);
+  syncCardBtn(card, code);
+}
+
+function cardQtySet(code, inp) {
+  const val = Math.max(0, parseInt(inp.value)||0);
+  inp.value = val || '';
+  inp.className = 'qty-inp' + (val>0?' on':'');
+  if (val > 0) setCart(code, val); else removeFromCart(code);
+  const card = inp.closest('.pcard');
+  syncCardBtn(card, code);
+}
+
+function cardAddBtn(code, btn) {
+  const card = btn.closest('.pcard');
+  const inp = card.querySelector('.qty-inp');
+  let qty = parseInt(inp.value)||0;
+  if (qty === 0) { qty = 1; inp.value = 1; inp.className = 'qty-inp on'; }
+  setCart(code, qty);
+  syncCardBtn(card, code);
+  showToast('🛒 장바구니에 담겼습니다');
+}
+
+function syncCardBtn(card, code) {
+  const btn = card.querySelector('.btn-add');
+  const inCart = !!cart[code];
+  btn.className = 'btn-add' + (inCart?' added':'');
+  btn.textContent = inCart ? '✓ 담겼음' : '🛒 담기';
+}
+
+// ─────────────────────────────────────────────
+// Cart Management
+// ─────────────────────────────────────────────
+function setCart(code, qty) {
+  const item = DB.codeMap[code];
+  if (!item) return;
+  cart[code] = { item, qty };
+  updateCartBadge();
+  if (activeTab === 'cart') renderCart();
+}
+
+function removeFromCart(code) {
+  delete cart[code];
+  updateCartBadge();
+  if (activeTab === 'cart') renderCart();
+}
+
+function updateCartBadge() {
+  const count = Object.keys(cart).length;
+  const badge = $('cartBadge');
+  badge.textContent = count;
+  badge.className = 'badge' + (count > 0 ? ' has' : '');
+
+  const floatCart = $('floatCart');
+  if (count > 0 && activeTab === 'search') {
+    floatCart.classList.add('visible');
+    $('floatBadge').textContent = count;
+    $('floatCartTxt').textContent = '장바구니';
+  } else {
+    floatCart.classList.remove('visible');
+  }
+}
+
+// ─────────────────────────────────────────────
+// Cart Render
+// ─────────────────────────────────────────────
+function renderCart() {
+  const items = Object.entries(cart);
+  const isEmpty = items.length === 0;
+  $('cartEmpty').style.display = isEmpty ? 'block' : 'none';
+  $('cartContent').style.display = isEmpty ? 'none' : 'block';
+  if (isEmpty) return;
+
+  // Items
+  const errImg = `this.onerror=null;this.src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><rect width="60" height="60" fill="%23f0f0f0"/></svg>'`;
+  const list = $('cartList');
+  list.innerHTML = items.map(([code, {item, qty}]) => {
+    const price = item[3];
+    const subtotal = price * qty;
+    return `<div class="citem" data-code="${code}">
+      <img class="citem-img" src="${IMG_BASE}${item[5]}-2-3.jpg" alt="${item[1]}" loading="lazy" onerror="${errImg}">
+      <div class="citem-info">
+        <div class="citem-name">${item[1]}</div>
+        <div class="citem-brand">${DB.brands[item[2]]}</div>
+        <div class="citem-price-row">
+          <span class="citem-price">${price ? '₩'+price.toLocaleString() : '가격문의'}</span>
+          ${price ? `<span class="citem-subtotal">× ${qty} = ₩${subtotal.toLocaleString()}</span>` : ''}
+        </div>
+        <div class="citem-controls">
+          <button class="cqty-btn" onclick="cartQtyDelta('${code}',-1)">−</button>
+          <span class="cqty-val">${qty}</span>
+          <button class="cqty-btn" onclick="cartQtyDelta('${code}',1)">+</button>
+          <button class="citem-del" onclick="removeCartItem('${code}')" title="삭제">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Total
+  const totalAmt = items.reduce((s, [, {item, qty}]) => s + (item[3]||0) * qty, 0);
+  const totalQty = items.reduce((s, [, {qty}]) => s + qty, 0);
+  $('cartTotal').innerHTML = `
+    <div class="ct-row"><span>총 상품 수</span><span>${items.length}개 품목 · ${totalQty}개</span></div>
+    <div class="ct-row"><span>합계 금액</span><span>₩${totalAmt.toLocaleString()}</span></div>`;
+}
+
+function cartQtyDelta(code, delta) {
+  if (!cart[code]) return;
+  const newQty = Math.max(1, cart[code].qty + delta);
+  cart[code].qty = newQty;
+  updateCartBadge();
+  renderCart();
+  // Sync cards in search grid
+  syncGridCard(code);
+}
+
+function removeCartItem(code) {
+  delete cart[code];
+  updateCartBadge();
+  renderCart();
+  syncGridCard(code);
+}
+
+function syncGridCard(code) {
+  const card = $('productGrid').querySelector(`[data-code="${code}"]`);
+  if (!card) return;
+  const inp = card.querySelector('.qty-inp');
+  const btn = card.querySelector('.btn-add');
+  const inCart = !!cart[code];
+  const qty = inCart ? cart[code].qty : 0;
+  if (inp) { inp.value = qty||''; inp.className='qty-inp'+(qty>0?' on':''); }
+  if (btn) { btn.className='btn-add'+(inCart?' added':''); btn.textContent=inCart?'✓ 담겼음':'🛒 담기'; }
+}
+
+// ─────────────────────────────────────────────
+// Excel Download
+// ─────────────────────────────────────────────
+function downloadExcel() {
+  const items = Object.values(cart);
+  if (items.length === 0) { showToast('⚠️ 장바구니가 비어 있습니다'); return; }
+  if (typeof XLSX === 'undefined') { showToast('⚠️ SheetJS 로드 실패. 새로고침 후 다시 시도해주세요.'); return; }
+
+  const company = $('inputCompany').value.trim() || '(미입력)';
+  const person  = $('inputPerson').value.trim()  || '(미입력)';
+  const phone   = $('inputPhone').value.trim()   || '(미입력)';
+  const today   = new Date().toLocaleDateString('ko-KR');
+
+  const aoa = [
+    ['한스코퍼레이션 크레텍 납품 주문서'],
+    [],
+    ['회사명', company, '', '담당자', person, '', '연락처', phone],
+    ['주문일', today],
+    [],
+    ['번호','상품코드','상품명','브랜드','단가(원)','수량','금액(원)','단위']
+  ];
+
+  let totalAmt = 0;
+  items.forEach(({item, qty}, idx) => {
+    const price = item[3] || 0;
+    const amount = price * qty;
+    totalAmt += amount;
+    aoa.push([idx+1, item[0], item[1], DB.brands[item[2]], price, qty, amount, item[4]]);
+  });
+
+  aoa.push([]);
+  aoa.push(['','','','','','합계',totalAmt,'']);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:5},{wch:14},{wch:30},{wch:14},{wch:12},{wch:6},{wch:14},{wch:12}
+  ];
+  // Merge title
+  ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:7}}];
+
+  XLSX.utils.book_append_sheet(wb, ws, '주문서');
+  const fn = `한스코퍼레이션_주문서_${today.replace(/\./g,'').replace(/ /g,'')}_${company.slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, fn);
+  showToast('📊 엑셀 파일이 다운로드되었습니다');
+}
+
+// ─────────────────────────────────────────────
+// Email (mailto:)
+// ─────────────────────────────────────────────
+function sendEmail() {
+  const items = Object.values(cart);
+  if (items.length === 0) { showToast('⚠️ 장바구니가 비어 있습니다'); return; }
+
+  const company = $('inputCompany').value.trim();
+  if (!company) { showToast('⚠️ 회사명을 입력해주세요'); $('inputCompany').focus(); return; }
+
+  const person  = $('inputPerson').value.trim()  || '-';
+  const phone   = $('inputPhone').value.trim()   || '-';
+  const today   = new Date().toLocaleDateString('ko-KR');
+  const totalAmt = items.reduce((s, {item, qty}) => s + (item[3]||0) * qty, 0);
+
+  const subject = `[주문] ${company} - ${today}`;
+
+  let body = `한스코퍼레이션 크레텍 납품 주문\n`;
+  body += `${'='.repeat(40)}\n`;
+  body += `회사명: ${company}\n담당자: ${person}\n연락처: ${phone}\n주문일: ${today}\n`;
+  body += `${'='.repeat(40)}\n\n`;
+  body += `번호 | 상품코드 | 상품명 | 단가 | 수량 | 금액\n`;
+  body += `${'-'.repeat(60)}\n`;
+
+  // Limit to first 30 items to keep URL reasonable
+  const MAX_MAIL_ITEMS = 30;
+  items.slice(0, MAX_MAIL_ITEMS).forEach(({item, qty}, i) => {
+    const price = item[3] ? item[3].toLocaleString() : '문의';
+    const amt = item[3] ? (item[3]*qty).toLocaleString() : '-';
+    body += `${i+1}. [${item[0]}] ${item[1]} | ₩${price} × ${qty}개 = ₩${amt}\n`;
+  });
+  if (items.length > MAX_MAIL_ITEMS) {
+    body += `\n... 외 ${items.length - MAX_MAIL_ITEMS}개 품목 (엑셀 파일 참조)\n`;
+  }
+
+  body += `\n${'='.repeat(40)}\n`;
+  body += `합계: ₩${totalAmt.toLocaleString()} (${items.length}개 품목)\n\n`;
+  body += `※ 정확한 주문 내역은 엑셀 주문서 파일을 첨부해 보내주세요.\n`;
+  body += `(위 엑셀 다운로드 버튼으로 파일 생성 가능)\n`;
+
+  const url = `mailto:${ORDER_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  // URL may be long; open safely
+  const a = document.createElement('a');
+  a.href = url;
+  a.click();
+  showToast('📨 이메일 앱이 열립니다');
+}
+
+// ─────────────────────────────────────────────
+// Tab Switching
+// ─────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+  $('sec-' + tab).classList.add('active');
+  document.querySelector(`.tab:${tab==='search'?'first':'last'}-child`).classList.add('active');
+
+  if (tab === 'cart') {
+    $('floatCart').classList.remove('visible');
+    renderCart();
+  } else {
+    updateCartBadge();
+  }
+  window.scrollTo(0, 0);
+}
+
+// ─────────────────────────────────────────────
+// Toast
+// ─────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ─────────────────────────────────────────────
+// Start
+// ─────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
