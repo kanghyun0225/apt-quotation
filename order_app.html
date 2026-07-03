@@ -538,12 +538,11 @@ function buildCard(it){
   const [cd,name,bi,price,unit,imgid] = it;
   const brand = cleanBrand(DB.brands[bi]);
   const p = mp(price);
-  const localUrl = `./imgs/${imgid}-2-3.jpg`;
-  const remoteUrl = IMG_BASE+imgid+'-2-3.jpg';
+  const imgUrl = IMG_BASE+imgid+'-2-3.jpg';
   const esc = s=>s.replace(/'/g,"\\'");
   return `<div class="pcard" onclick="openModal('${esc(cd)}')">
-    <img class="pcard-img" src="${localUrl}" alt="" loading="lazy"
-      onerror="if(this.src.includes('./imgs/')){this.src='${remoteUrl}'}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
+    <img class="pcard-img" src="${imgUrl}" alt="" loading="lazy"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="pcard-img-err">📦</div>
     <div class="pcard-body">
       <div class="pcard-name" title="${esc(name)}">${name}</div>
@@ -600,8 +599,8 @@ function openModal(cd){
   modalItem = it;
   const [,name,bi,price,unit,imgid] = it;
   const mImgEl = document.getElementById('modal-img');
-  mImgEl.src = `./imgs/${imgid}-2-3.jpg`;
-  mImgEl.onerror = function(){if(this.src.includes('./imgs/')){this.src=IMG_BASE+imgid+'-2-3.jpg';}else{this.src='';}this.onerror=null;};
+  mImgEl.src = IMG_BASE+imgid+'-2-3.jpg';
+  mImgEl.onerror = function(){this.src='';this.onerror=null;};
   document.getElementById('modal-name').textContent = name;
   document.getElementById('modal-brand').textContent = cleanBrand(DB.brands[bi]);
   document.getElementById('modal-code').textContent = '품번: '+cd;
