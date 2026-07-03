@@ -529,9 +529,14 @@ function showItemsPage(){
   window.scrollTo({top:56,behavior:'smooth'});
 }
 
+function cleanBrand(raw){
+  // 보관함 HTML 쓰레기 제거: \n, \t, "최근 주문일:..." 등
+  return (raw||'').replace(/\s*최근 주문일:[^\n]*/g,'').replace(/[\n\t]/g,' ').replace(/\s+/g,' ').trim();
+}
+
 function buildCard(it){
   const [cd,name,bi,price,unit,imgid] = it;
-  const brand = DB.brands[bi]||'';
+  const brand = cleanBrand(DB.brands[bi]);
   const p = mp(price);
   const localUrl = `./imgs/${imgid}-2-3.jpg`;
   const remoteUrl = IMG_BASE+imgid+'-2-3.jpg';
@@ -542,9 +547,9 @@ function buildCard(it){
     <div class="pcard-img-err">📦</div>
     <div class="pcard-body">
       <div class="pcard-name" title="${esc(name)}">${name}</div>
+      ${unit ? `<div class="pcard-unit">${unit}</div>` : ''}
       <div class="pcard-brand">${brand}</div>
       <div class="pcard-price">₩${fmt(p)}</div>
-      <div class="pcard-unit">${unit||''}</div>
     </div>
     <button class="pcard-btn" onclick="event.stopPropagation();quickAdd('${esc(cd)}')">+ 담기</button>
   </div>`;
@@ -598,7 +603,7 @@ function openModal(cd){
   mImgEl.src = `./imgs/${imgid}-2-3.jpg`;
   mImgEl.onerror = function(){if(this.src.includes('./imgs/')){this.src=IMG_BASE+imgid+'-2-3.jpg';}else{this.src='';}this.onerror=null;};
   document.getElementById('modal-name').textContent = name;
-  document.getElementById('modal-brand').textContent = DB.brands[bi]||'';
+  document.getElementById('modal-brand').textContent = cleanBrand(DB.brands[bi]);
   document.getElementById('modal-code').textContent = '품번: '+cd;
   document.getElementById('modal-price').textContent = '₩'+fmt(mp(price));
   document.getElementById('modal-unit').textContent = unit ? '단위: '+unit : '';
