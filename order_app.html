@@ -189,7 +189,7 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f0
 
 <!-- 헤더 -->
 <div id="hdr">
-  <div class="logo">한스<span>코퍼레이션</span></div>
+  <div class="logo" id="logo" style="cursor:pointer;user-select:none" title="">한스<span>코퍼레이션</span></div>
   <div id="search-wrap">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input id="q" type="text" placeholder="상품명, 브랜드 검색...">
@@ -270,17 +270,38 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f0
   </div>
 </div>
 
+<!-- 관리자 설정 모달 -->
+<div id="admin-modal" style="display:none;position:fixed;inset:0;z-index:400;align-items:center;justify-content:center;background:rgba(0,0,0,.5)">
+  <div style="background:#fff;border-radius:16px;padding:28px 24px;width:320px;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div style="font-size:16px;font-weight:700;margin-bottom:4px">🔐 관리자 설정</div>
+    <div style="font-size:12px;color:#888;margin-bottom:20px">설정값은 이 기기에만 저장됩니다</div>
+    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">마진율 (%)</label>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <input id="admin-margin" type="number" min="0" max="100" step="0.5"
+        style="flex:1;border:1px solid #d0d4da;border-radius:8px;padding:10px 12px;font-size:18px;font-weight:700;text-align:center;outline:none">
+      <span style="font-size:18px;font-weight:700;color:#888">%</span>
+    </div>
+    <div style="font-size:11px;color:#aaa;margin-bottom:20px">예) 30 입력 시 공급가 × 1.3, 10원 단위 올림 적용</div>
+    <div style="display:flex;gap:8px">
+      <button onclick="saveAdminMargin()" style="flex:1;background:#2456a4;color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:700;cursor:pointer">저장</button>
+      <button onclick="closeAdmin()" style="flex:1;background:#f0f2f5;color:#555;border:none;border-radius:8px;padding:11px;font-size:14px;cursor:pointer">취소</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  ▶ 마진율 설정 (여기만 수정하세요)
-const MARGIN_RATE = 0.30; // 30% → 0.25 = 25%, 0.35 = 35%
+//  마진율: localStorage에서 로드, 기본값 30%
+//  (헤더 로고를 5번 빠르게 클릭하면 관리자 설정창)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let MARGIN_RATE = parseFloat(localStorage.getItem('hs_margin') || '0.30');
 const IMG_BASE = 'https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/';
 const ORDER_EMAIL = 'kanghyun0225@gmail.com';
 const PAGE_SIZE = 48;
 const COMPANY_NAME = '한스코퍼레이션';
 
-function mp(raw){ return raw ? Math.round(raw * (1 + MARGIN_RATE)) : 0; }
+// 공급단가 × (1+마진율) 후 10원 단위 올림
+function mp(raw){ return raw ? Math.ceil(raw * (1 + MARGIN_RATE) / 10) * 10 : 0; }
 function fmt(n){ return (+n).toLocaleString('ko-KR'); }
 
 const MAIN_ICONS = ['🔧','🔩','⚙️','📐','⚡','💨','🔥','🦺','🏭'];
@@ -512,11 +533,12 @@ function buildCard(it){
   const [cd,name,bi,price,unit,imgid] = it;
   const brand = DB.brands[bi]||'';
   const p = mp(price);
-  const imgUrl = IMG_BASE+imgid+'-2-3.jpg';
+  const localUrl = `./imgs/${imgid}-2-3.jpg`;
+  const remoteUrl = IMG_BASE+imgid+'-2-3.jpg';
   const esc = s=>s.replace(/'/g,"\\'");
   return `<div class="pcard" onclick="openModal('${esc(cd)}')">
-    <img class="pcard-img" src="${imgUrl}" alt="" loading="lazy"
-      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <img class="pcard-img" src="${localUrl}" alt="" loading="lazy"
+      onerror="if(this.src.includes('./imgs/')){this.src='${remoteUrl}'}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
     <div class="pcard-img-err">📦</div>
     <div class="pcard-body">
       <div class="pcard-name" title="${esc(name)}">${name}</div>
@@ -572,7 +594,9 @@ function openModal(cd){
   if(!it) return;
   modalItem = it;
   const [,name,bi,price,unit,imgid] = it;
-  document.getElementById('modal-img').src = IMG_BASE+imgid+'-2-3.jpg';
+  const mImgEl = document.getElementById('modal-img');
+  mImgEl.src = `./imgs/${imgid}-2-3.jpg`;
+  mImgEl.onerror = function(){if(this.src.includes('./imgs/')){this.src=IMG_BASE+imgid+'-2-3.jpg';}else{this.src='';}this.onerror=null;};
   document.getElementById('modal-name').textContent = name;
   document.getElementById('modal-brand').textContent = DB.brands[bi]||'';
   document.getElementById('modal-code').textContent = '품번: '+cd;
@@ -639,8 +663,8 @@ function renderCartPanel(){
     const p=mp(price);
     const esc=s=>s.replace(/'/g,"\\'");
     return `<div class="citem">
-      <img class="citem-img" src="${IMG_BASE+imgid+'-2-3.jpg'}" alt=""
-        onerror="this.style.background='#f5f5f5';this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='">
+      <img class="citem-img" src="./imgs/${imgid}-2-3.jpg" alt=""
+        onerror="if(this.src.includes('./imgs/')){this.src='${IMG_BASE+imgid+'-2-3.jpg'}'}else{this.style.background='#f5f5f5';this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}this.onerror=null">
       <div class="citem-info">
         <div class="citem-name">${name}</div>
         <div class="citem-price">₩${fmt(p)} × ${qty} = ₩${fmt(p*qty)}</div>
@@ -675,6 +699,33 @@ function closeCart(){
 document.getElementById('cart-close').onclick=closeCart;
 document.getElementById('overlay').onclick=closeCart;
 document.getElementById('btn-clear-cart').onclick=()=>{cart={};renderCartBadge();renderCartPanel();};
+
+// ──────────────────────────────────────
+// 관리자 패널 (로고 5번 빠른 클릭)
+// ──────────────────────────────────────
+let _logoCnt=0, _logoTimer;
+document.getElementById('logo').addEventListener('click',()=>{
+  _logoCnt++;
+  clearTimeout(_logoTimer);
+  _logoTimer=setTimeout(()=>_logoCnt=0, 2000);
+  if(_logoCnt>=5){
+    _logoCnt=0;
+    document.getElementById('admin-margin').value=(MARGIN_RATE*100).toFixed(1);
+    document.getElementById('admin-modal').style.display='flex';
+  }
+});
+function saveAdminMargin(){
+  const v=parseFloat(document.getElementById('admin-margin').value);
+  if(isNaN(v)||v<0||v>300){alert('0~300 사이 숫자를 입력해주세요.');return;}
+  MARGIN_RATE=v/100;
+  localStorage.setItem('hs_margin',MARGIN_RATE.toString());
+  closeAdmin();
+  // 현재 화면 가격 즉시 갱신
+  if(state.catIdx!==null) renderProducts();
+  else if(state.q.length>=2) renderSearch();
+  alert(`마진율 ${v}%로 저장됐습니다.`);
+}
+function closeAdmin(){ document.getElementById('admin-modal').style.display='none'; }
 
 // ──────────────────────────────────────
 // 검색
