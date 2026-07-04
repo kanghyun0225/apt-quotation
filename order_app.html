@@ -583,7 +583,7 @@ function cleanBrand(raw){
 }
 
 function buildCard(it){
-  const [cd,name,bi,price,unit,imgid] = it;
+  const [cd,name,bi,price,unit,imgid,,spec] = it;
   const brand = cleanBrand(DB.brands[bi]);
   const p = mp(price);
   const imgUrl = IMG_BASE+imgid+'-2-3.jpg';
@@ -594,7 +594,8 @@ function buildCard(it){
     <div class="pcard-img-err">📦</div>
     <div class="pcard-body">
       <div class="pcard-name" title="${esc(name)}">${name}</div>
-      ${unit ? `<div class="pcard-unit"><span class="unit-label">규격</span> ${unit}</div>` : ''}
+      ${spec ? `<div class="pcard-unit"><span class="unit-label">규격</span> ${spec}</div>` : ''}
+      ${unit ? `<div class="pcard-unit" style="color:#888;font-size:10px"><span class="unit-label" style="background:#f0f0f0;color:#666">단위</span> ${unit}</div>` : ''}
       <div class="pcard-brand">${brand}</div>
       <div class="pcard-price">₩${fmt(p)}</div>
     </div>
@@ -645,7 +646,7 @@ function openModal(cd){
   const it = DB.codeMap[cd];
   if(!it) return;
   modalItem = it;
-  const [,name,bi,price,unit,imgid] = it;
+  const [,name,bi,price,unit,imgid,,spec] = it;
   const mImgEl = document.getElementById('modal-img');
   mImgEl.src = IMG_BASE+imgid+'-2-3.jpg';
   mImgEl.onerror = function(){this.src='';this.onerror=null;};
@@ -653,7 +654,8 @@ function openModal(cd){
   document.getElementById('modal-brand').textContent = cleanBrand(DB.brands[bi]);
   document.getElementById('modal-code').textContent = '품번: '+cd;
   document.getElementById('modal-price').textContent = '₩'+fmt(mp(price));
-  document.getElementById('modal-unit').textContent = unit ? '단위: '+unit : '';
+  const unitEl = document.getElementById('modal-unit');
+  unitEl.innerHTML = (spec ? `<span style="color:#2456a4;font-weight:600">규격: ${spec}</span>　` : '') + (unit ? `단위: ${unit}` : '');
   const step = unitStep(unit);
   document.getElementById('modal-qty').value = cart[cd]?.qty || step;
   document.getElementById('modal-qty').step = step;
