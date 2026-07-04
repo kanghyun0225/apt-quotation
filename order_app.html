@@ -141,7 +141,31 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f0
 /* ── 모바일 bottom nav ── */
 #bottom-nav{display:none}
 
+/* ── PC (641px 이상) ── */
+@media(min-width:641px){
+  #sidebar{height:calc(100vh - 56px);position:sticky;top:56px;overflow-y:auto}
+  #prod-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+  #sub-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .pcard-name{font-size:13px}
+  .pcard-price{font-size:15px}
+}
+
+/* ── 태블릿 (641~900px) ── */
+@media(min-width:641px) and (max-width:900px){
+  #sidebar{width:120px}
+  .main-label{font-size:10px}
+  #prod-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+}
+
+/* ── 모바일 (640px 이하) ── */
 @media(max-width:640px){
+  /* 헤더 */
+  #hdr{gap:8px;padding:0 10px;height:52px}
+  #hdr .logo{font-size:15px}
+  #search-wrap{padding:0 8px}
+  #q{font-size:13px;padding:6px}
+  #cart-btn{padding:6px 10px;font-size:12px;gap:4px}
+
   /* 사이드바 숨기고 bottom nav 표시 */
   #sidebar{display:none}
   #bottom-nav{
@@ -154,27 +178,50 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f0
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
     scrollbar-width:none;
-    height:58px;
+    height:56px;
   }
   #bottom-nav::-webkit-scrollbar{display:none}
   .bn-item{
     display:flex;flex-direction:column;align-items:center;justify-content:center;
-    min-width:56px;padding:6px 8px;cursor:pointer;
+    flex:1;min-width:52px;max-width:72px;
+    padding:4px 4px;cursor:pointer;
     border-top:3px solid transparent;
-    gap:2px;flex-shrink:0;transition:all .15s;
-    color:#666;
+    gap:2px;transition:all .15s;color:#666;
   }
   .bn-item.active{border-top-color:#2456a4;color:#2456a4}
-  .bn-icon{font-size:20px;line-height:1}
-  .bn-label{font-size:9px;font-weight:600;white-space:nowrap;letter-spacing:-.3px}
+  .bn-icon{font-size:18px;line-height:1}
+  .bn-label{font-size:9px;font-weight:600;white-space:nowrap;letter-spacing:-.5px;line-height:1.1}
 
-  /* 콘텐츠 하단 여백 (bottom nav 가리지 않게) */
-  #main-wrap{min-height:calc(100vh - 56px - 58px)}
-  #content{padding:12px 12px 70px}
-  #cart-panel{width:100%}
-  #prod-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
-  #sub-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
-  #pagination{padding-bottom:8px}
+  /* 콘텐츠 */
+  #main-wrap{min-height:calc(100vh - 52px - 56px)}
+  #content{padding:10px 10px 66px}
+  #cart-panel{width:100%;right:-100%}
+  #cart-panel.open{right:0}
+
+  /* 그리드 — 2열 고정 */
+  #prod-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  #sub-grid{grid-template-columns:repeat(3,1fr);gap:8px}
+  .sub-card{padding:10px 6px;font-size:12px}
+
+  /* 카드 */
+  .pcard-name{font-size:11px;-webkit-line-clamp:2}
+  .pcard-brand{font-size:10px}
+  .pcard-unit{font-size:10px}
+  .pcard-price{font-size:13px}
+  .pcard-btn{font-size:11px;padding:6px;margin:0 8px 8px}
+
+  /* 페이지네이션 */
+  #pagination{padding-bottom:8px;gap:4px}
+  .pg-btn{padding:6px 10px;font-size:12px}
+
+  /* 모달 */
+  #modal{padding:0;align-items:flex-end}
+  #modal-box{border-radius:16px 16px 0 0;max-height:85vh;padding:20px 16px}
+
+  /* 장바구니 */
+  .citem-img{width:44px;height:44px}
+  #cart-hdr{padding:12px 16px}
+  #cart-footer{padding:12px}
 }
 </style>
 </head>
@@ -606,28 +653,50 @@ function openModal(cd){
   document.getElementById('modal-code').textContent = '품번: '+cd;
   document.getElementById('modal-price').textContent = '₩'+fmt(mp(price));
   document.getElementById('modal-unit').textContent = unit ? '단위: '+unit : '';
-  document.getElementById('modal-qty').value = cart[cd]?.qty||1;
+  const step = unitStep(unit);
+  document.getElementById('modal-qty').value = cart[cd]?.qty || step;
+  document.getElementById('modal-qty').step = step;
+  document.getElementById('modal-qty').min = step;
   document.getElementById('modal').classList.add('show');
+}
+
+// 단위에서 수량 step 추출 (예: "10 / 조" → 10, "1 / EA" → 1)
+function unitStep(unit){
+  if(!unit) return 1;
+  const m = (unit+'').match(/^(\d+)/);
+  return (m && parseInt(m[1]) > 1) ? parseInt(m[1]) : 1;
 }
 
 document.getElementById('modal-close').onclick = ()=>document.getElementById('modal').classList.remove('show');
 document.getElementById('modal').onclick = e=>{if(e.target.id==='modal')document.getElementById('modal').classList.remove('show');};
 document.getElementById('modal-qty-minus').onclick = ()=>{
-  const inp=document.getElementById('modal-qty'); if(+inp.value>1) inp.value=+inp.value-1;
+  if(!modalItem) return;
+  const inp = document.getElementById('modal-qty');
+  const step = unitStep(modalItem[4]);
+  const cur = +inp.value;
+  inp.value = Math.max(step, cur - step);
 };
 document.getElementById('modal-qty-plus').onclick = ()=>{
-  const inp=document.getElementById('modal-qty'); inp.value=+inp.value+1;
+  if(!modalItem) return;
+  const inp = document.getElementById('modal-qty');
+  const step = unitStep(modalItem[4]);
+  inp.value = +inp.value + step;
 };
 document.getElementById('modal-add').onclick = ()=>{
   if(!modalItem) return;
-  addToCart(modalItem[0], +document.getElementById('modal-qty').value||1);
+  const step = unitStep(modalItem[4]);
+  const qty = Math.max(step, +document.getElementById('modal-qty').value || step);
+  addToCart(modalItem[0], qty);
   document.getElementById('modal').classList.remove('show');
 };
 
 // ──────────────────────────────────────
 // 장바구니
 // ──────────────────────────────────────
-function quickAdd(cd){ addToCart(cd,1); }
+function quickAdd(cd){
+  const it = DB?.codeMap[cd]; if(!it) return;
+  addToCart(cd, unitStep(it[4]));
+}
 
 function addToCart(cd, qty){
   if(!DB) return;
@@ -667,8 +736,8 @@ function renderCartPanel(){
     const p=mp(price);
     const esc=s=>s.replace(/'/g,"\\'");
     return `<div class="citem">
-      <img class="citem-img" src="./imgs/${imgid}-2-3.jpg" alt=""
-        onerror="if(this.src.includes('./imgs/')){this.src='${IMG_BASE+imgid+'-2-3.jpg'}'}else{this.style.background='#f5f5f5';this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}this.onerror=null">
+      <img class="citem-img" src="${IMG_BASE+imgid+'-2-3.jpg'}" alt=""
+        onerror="this.style.background='#eee';this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';this.onerror=null">
       <div class="citem-info">
         <div class="citem-name">${name}</div>
         <div class="citem-price">₩${fmt(p)} × ${qty} = ₩${fmt(p*qty)}</div>
@@ -683,9 +752,10 @@ function renderCartPanel(){
   }).join('');
 }
 
-function changeQty(cd,delta){
+function changeQty(cd, dir){
   if(!cart[cd]) return;
-  cart[cd].qty=Math.max(1,cart[cd].qty+delta);
+  const step = unitStep(cart[cd].item[4]);
+  cart[cd].qty = Math.max(step, cart[cd].qty + dir * step);
   renderCartBadge(); renderCartPanel();
 }
 function removeCart(cd){ delete cart[cd]; renderCartBadge(); renderCartPanel(); }
