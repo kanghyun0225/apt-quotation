@@ -351,6 +351,8 @@ const COMPANY_NAME = '한스코퍼레이션';
 // 공급단가 × (1+마진율) 후 10원 단위 올림
 function mp(raw){ return raw ? Math.ceil(raw * (1 + MARGIN_RATE) / 10) * 10 : 0; }
 function fmt(n){ return (+n).toLocaleString('ko-KR'); }
+// 가격 표시 (0이면 가격문의)
+function fmtPrice(raw){ const p=mp(raw); return p ? '₩'+fmt(p) : '가격문의'; }
 
 const MAIN_ICONS = ['🔧','🔩','⚙️','📐','⚡','💨','🔥','🦺','🏭'];
 // 모바일 bottom nav용 짧은 레이블 (9자 이내)
@@ -597,7 +599,7 @@ function buildCard(it){
       ${spec ? `<div class="pcard-unit"><span class="unit-label">규격</span> ${spec}</div>` : ''}
       ${unit ? `<div class="pcard-unit" style="color:#888;font-size:10px"><span class="unit-label" style="background:#f0f0f0;color:#666">단위</span> ${unit}</div>` : ''}
       <div class="pcard-brand">${brand}</div>
-      <div class="pcard-price">₩${fmt(p)}</div>
+      <div class="pcard-price">${p ? '₩'+fmt(p) : '<span style="color:#999;font-size:11px">가격문의</span>'}</div>
     </div>
     <button class="pcard-btn" onclick="event.stopPropagation();quickAdd('${esc(cd)}')">+ 담기</button>
   </div>`;
@@ -653,7 +655,7 @@ function openModal(cd){
   document.getElementById('modal-name').textContent = name;
   document.getElementById('modal-brand').textContent = cleanBrand(DB.brands[bi]);
   document.getElementById('modal-code').textContent = '품번: '+cd;
-  document.getElementById('modal-price').textContent = '₩'+fmt(mp(price));
+  document.getElementById('modal-price').textContent = fmtPrice(price);
   const unitEl = document.getElementById('modal-unit');
   unitEl.innerHTML = (spec ? `<span style="color:#2456a4;font-weight:600">규격: ${spec}</span>　` : '') + (unit ? `단위: ${unit}` : '');
   const step = unitStep(unit);
