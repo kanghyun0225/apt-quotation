@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>한스코퍼레이션 자재주문</title>
+<title>한스코퍼레이션 공기구 주문</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.20.2/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f0f2f5;color:#222;min-height:100vh}
 
-/* ── 헤더 ── */
+/* 헤더 */
 #hdr{position:sticky;top:0;z-index:100;background:#1a3a5c;color:#fff;display:flex;align-items:center;gap:12px;padding:0 16px;height:56px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
-#hdr .logo{font-size:17px;font-weight:700;white-space:nowrap;letter-spacing:-.5px}
+#hdr .logo{font-size:17px;font-weight:700;white-space:nowrap;letter-spacing:-.5px;cursor:pointer;user-select:none}
 #hdr .logo span{color:#f0c040}
 #search-wrap{flex:1;display:flex;align-items:center;background:rgba(255,255,255,.15);border-radius:8px;padding:0 12px;max-width:480px}
 #search-wrap svg{opacity:.7;flex-shrink:0}
@@ -21,866 +21,579 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f0
 #cart-btn{position:relative;background:#f0c040;border:none;border-radius:8px;cursor:pointer;padding:8px 14px;font-weight:700;font-size:13px;color:#1a3a5c;display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0}
 #cart-badge{background:#e84040;color:#fff;border-radius:99px;font-size:11px;font-weight:700;padding:1px 6px;min-width:20px;text-align:center;display:none}
 
-/* ── 레이아웃 ── */
-#main-wrap{display:flex;min-height:calc(100vh - 56px)}
+/* 브랜드 필터 바 */
+#filter-bar{background:#fff;border-bottom:1px solid #e0e4ea;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:56px;z-index:90}
+#filter-bar .fb-label{font-size:12px;color:#666;white-space:nowrap;font-weight:600}
+.brand-chip{border:1px solid #d0d4da;background:#fff;border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.brand-chip:hover{border-color:#2456a4;color:#2456a4}
+.brand-chip.active{background:#2456a4;border-color:#2456a4;color:#fff;font-weight:600}
 
-/* ── 대분류 사이드바 ── */
-#sidebar{width:150px;flex-shrink:0;background:#fff;border-right:1px solid #e0e4ea;overflow-y:auto}
-.main-item{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 8px;cursor:pointer;border-left:3px solid transparent;gap:6px;transition:all .15s;border-bottom:1px solid #f0f2f5;text-align:center}
-.main-item:hover{background:#f0f4ff}
-.main-item.active{background:#eef3ff;border-left-color:#2456a4;color:#2456a4;font-weight:700}
-.main-icon{font-size:24px;line-height:1}
-.main-label{font-size:11px;line-height:1.3;word-break:keep-all}
-
-/* ── 컨텐츠 영역 ── */
-#content{flex:1;min-width:0;padding:16px}
-
-/* 브레드크럼 */
-#breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:#666;margin-bottom:14px;flex-wrap:wrap}
-#breadcrumb .crumb{cursor:pointer;color:#2456a4}
-#breadcrumb .crumb:hover{text-decoration:underline}
-#breadcrumb .sep{color:#bbb}
-#breadcrumb .current{color:#222;font-weight:600}
-
-/* 소분류 그리드 */
-#sub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px}
-.sub-card{background:#fff;border:1px solid #e0e4ea;border-radius:10px;padding:14px 10px;cursor:pointer;text-align:center;transition:all .15s;font-size:13px;line-height:1.4;word-break:keep-all}
-.sub-card:hover{border-color:#2456a4;background:#eef3ff;color:#2456a4;transform:translateY(-1px)}
-.sub-count{font-size:11px;color:#888;margin-top:4px}
-
-/* 소분류 검색 */
-#sub-filter-wrap{margin-bottom:12px;display:none}
-#sub-filter{width:100%;max-width:360px;border:1px solid #d0d4da;border-radius:8px;padding:8px 12px;font-size:13px;outline:none}
-#sub-filter:focus{border-color:#2456a4}
-
-/* 상품 그리드 */
+/* 컨텐츠 */
+#content{padding:16px}
 #items-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
 #items-count{font-size:13px;color:#666}
 #sort-sel{border:1px solid #d0d4da;border-radius:6px;padding:6px 10px;font-size:13px;outline:none;background:#fff}
-#prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
 
-/* 상품 카드 */
+/* 상품 그리드 */
+#prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
 .pcard{background:#fff;border:1px solid #e0e4ea;border-radius:12px;overflow:hidden;cursor:pointer;transition:all .15s;display:flex;flex-direction:column}
 .pcard:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.1);border-color:#2456a4}
 .pcard-img{width:100%;aspect-ratio:1;object-fit:contain;padding:12px;background:#fafafa;border-bottom:1px solid #f0f2f5}
 .pcard-img-err{width:100%;aspect-ratio:1;display:none;align-items:center;justify-content:center;font-size:36px;color:#ccc;background:#fafafa;border-bottom:1px solid #f0f2f5}
 .pcard-body{padding:10px;flex:1;display:flex;flex-direction:column;gap:4px}
-.pcard-name{font-size:12px;line-height:1.4;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .pcard-brand{font-size:11px;color:#888}
+.pcard-name{font-size:12px;line-height:1.4;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-weight:600}
+.pcard-spec{font-size:11px;color:#999;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .pcard-price{font-size:14px;font-weight:700;color:#2456a4}
 .pcard-unit{font-size:11px;color:#555;margin-bottom:2px}
-.unit-label{background:#e8eef8;color:#2456a4;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;margin-right:3px;vertical-align:middle}
 .pcard-btn{margin:0 10px 10px;background:#2456a4;color:#fff;border:none;border-radius:8px;padding:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
 .pcard-btn:hover{background:#1a3a5c}
 
-/* 페이지네이션 */
-#pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:20px;flex-wrap:wrap}
-.pg-btn{border:1px solid #d0d4da;background:#fff;border-radius:8px;padding:7px 13px;font-size:13px;cursor:pointer;transition:all .15s}
-.pg-btn:hover{border-color:#2456a4;color:#2456a4}
-.pg-btn.active{background:#2456a4;border-color:#2456a4;color:#fff;font-weight:700}
-.pg-btn:disabled{opacity:.4;cursor:default}
+/* 검색 없음 */
+#no-result{display:none;text-align:center;padding:60px 20px;color:#999;font-size:15px}
 
-/* 검색 배너 */
-#search-banner{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;font-size:13px;color:#856404;margin-bottom:12px;display:none}
-
-/* ── 장바구니 패널 ── */
+/* 장바구니 패널 */
 #cart-panel{position:fixed;top:0;right:-420px;width:420px;height:100vh;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,.15);z-index:200;display:flex;flex-direction:column;transition:right .3s ease}
 #cart-panel.open{right:0}
 #cart-hdr{background:#1a3a5c;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
 #cart-hdr h2{font-size:16px}
 #cart-close{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1}
 #cart-body{flex:1;overflow-y:auto;padding:16px}
+#cart-empty{text-align:center;padding:60px 20px;color:#999;font-size:14px;display:none}
 .citem{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f0f2f5;align-items:flex-start}
-.citem-img{width:52px;height:52px;object-fit:contain;border:1px solid #eee;border-radius:6px;flex-shrink:0}
+.citem-img{width:52px;height:52px;object-fit:contain;border:1px solid #eee;border-radius:6px;flex-shrink:0;background:#fafafa}
 .citem-info{flex:1;min-width:0}
-.citem-name{font-size:12px;line-height:1.4;margin-bottom:3px}
+.citem-name{font-size:12px;line-height:1.4;margin-bottom:2px;font-weight:600}
+.citem-spec{font-size:11px;color:#999;margin-bottom:3px}
 .citem-price{font-size:13px;font-weight:700;color:#2456a4}
 .citem-ctrl{display:flex;align-items:center;gap:6px;margin-top:6px}
 .qty-btn{width:26px;height:26px;border:1px solid #d0d4da;border-radius:6px;background:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
 .qty-btn:hover{background:#f0f2f5}
-.qty-val{font-size:14px;font-weight:600;min-width:24px;text-align:center}
-.citem-del{background:none;border:none;color:#ccc;font-size:18px;cursor:pointer;margin-left:auto;padding:0 2px}
+.qty-val{min-width:32px;text-align:center;font-size:13px;font-weight:600}
+.citem-del{margin-left:auto;background:none;border:none;color:#ccc;font-size:18px;cursor:pointer;line-height:1}
 .citem-del:hover{color:#e84040}
-#cart-footer{padding:16px;border-top:1px solid #e0e4ea;background:#fafafa}
-#cart-total-row{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:16px;margin-bottom:12px}
-.cart-action-btns{display:flex;gap:8px}
-.cart-action-btns button{flex:1;padding:10px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer}
-#btn-excel{background:#217346;color:#fff}
-#btn-email{background:#e84040;color:#fff}
+#cart-footer{padding:16px;border-top:2px solid #f0f2f5;background:#fafafa}
+.total-row{display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-bottom:12px}
+.total-row span:last-child{color:#2456a4;font-size:17px}
+.cart-actions{display:flex;gap:8px}
+.cart-actions button{flex:1;padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
 #btn-clear-cart{background:#f0f2f5;color:#555}
-#overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;display:none}
-#overlay.show{display:block}
+#btn-export{background:#2456a4;color:#fff}
+#btn-export:hover{background:#1a3a5c}
 
-/* 모달 (상품 상세) */
-#modal{display:none;position:fixed;inset:0;z-index:300;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.5)}
-#modal.show{display:flex}
-#modal-box{background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;position:relative}
-#modal-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;color:#888}
-#modal-img{width:100%;max-height:280px;object-fit:contain;margin-bottom:16px;border-radius:8px;border:1px solid #eee;padding:12px}
-#modal-name{font-size:16px;font-weight:700;margin-bottom:6px;line-height:1.4}
-#modal-brand{font-size:13px;color:#888;margin-bottom:4px}
-#modal-code{font-size:12px;color:#999;margin-bottom:12px}
-#modal-price{font-size:24px;font-weight:700;color:#2456a4;margin-bottom:6px}
-#modal-unit{font-size:13px;color:#666;margin-bottom:16px}
-#modal-qty-row{display:flex;align-items:center;gap:12px;margin-bottom:4px}
-#modal-qty{width:60px;text-align:center;border:1px solid #d0d4da;border-radius:8px;padding:8px;font-size:16px;font-weight:700}
-#modal-add{flex:1;background:#2456a4;color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer}
-#modal-add:hover{background:#1a3a5c}
+/* 상품 모달 */
+#modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center}
+#modal-bg.open{display:flex}
+#modal{background:#fff;border-radius:16px;max-width:480px;width:90%;max-height:85vh;overflow-y:auto;padding:24px}
+#modal-close{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:#666;margin-top:-4px}
+#modal-img{width:200px;height:200px;object-fit:contain;border:1px solid #eee;border-radius:8px;display:block;margin:12px auto;background:#fafafa}
+#modal-brand{font-size:12px;color:#888;margin-bottom:4px}
+#modal-name{font-size:18px;font-weight:700;margin-bottom:6px}
+#modal-spec{font-size:13px;color:#666;margin-bottom:4px}
+#modal-code{font-size:11px;color:#aaa;margin-bottom:16px}
+#modal-price-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:12px;background:#f0f4ff;border-radius:8px}
+#modal-price{font-size:22px;font-weight:700;color:#2456a4}
+#modal-unit{font-size:13px;color:#555}
+.modal-qty-wrap{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.modal-qty-wrap label{font-size:13px;color:#555;min-width:40px}
+.modal-qty-wrap .qty-btn{width:32px;height:32px}
+#modal-qty{width:60px;text-align:center;border:1px solid #d0d4da;border-radius:8px;padding:6px;font-size:15px;font-weight:700}
+#modal-add-btn{width:100%;padding:13px;background:#2456a4;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
+#modal-add-btn:hover{background:#1a3a5c}
 
-/* 로딩 */
-#loading{position:fixed;inset:0;background:rgba(255,255,255,.98);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
-#loading h2{color:#1a3a5c;font-size:18px}
-#prog-bar-wrap{width:280px;background:#e0e4ea;border-radius:99px;height:8px;overflow:hidden}
-#prog-bar{width:0%;height:100%;background:#2456a4;border-radius:99px;transition:width .1s}
-#prog-text{font-size:13px;color:#888}
+/* 관리자 모달 */
+#admin-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:center;justify-content:center}
+#admin-modal.open{display:flex}
+#admin-box{background:#fff;border-radius:12px;padding:24px;width:300px}
+#admin-box h3{font-size:16px;font-weight:700;margin-bottom:16px}
+#admin-box label{font-size:13px;color:#555;display:block;margin-bottom:6px}
+#admin-margin{width:100%;border:1px solid #d0d4da;border-radius:8px;padding:8px 12px;font-size:16px;text-align:center;outline:none}
+.admin-actions{display:flex;gap:8px;margin-top:16px}
+.admin-actions button{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+#admin-cancel{background:#f0f2f5;color:#555}
+#admin-save{background:#2456a4;color:#fff}
 
-/* 빈 상태 */
-.empty-state{text-align:center;padding:60px 20px;color:#aaa}
-.empty-state .icon{font-size:48px;margin-bottom:12px}
-.empty-state p{font-size:15px}
+/* 오버레이 */
+#overlay{display:none;position:fixed;inset:0;z-index:150}
+#overlay.open{display:block}
 
-/* ── 모바일 bottom nav ── */
-#bottom-nav{display:none}
-
-/* ── PC (641px 이상) ── */
-@media(min-width:641px){
-  #sidebar{height:calc(100vh - 56px);position:sticky;top:56px;overflow-y:auto}
-  #prod-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
-  #sub-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
-  .pcard-name{font-size:13px}
-  .pcard-price{font-size:15px}
-}
-
-/* ── 태블릿 (641~900px) ── */
-@media(min-width:641px) and (max-width:900px){
-  #sidebar{width:120px}
-  .main-label{font-size:10px}
-  #prod-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
-}
-
-/* ── 모바일 (640px 이하) ── */
-@media(max-width:640px){
-  /* 헤더 */
-  #hdr{gap:8px;padding:0 10px;height:52px}
-  #hdr .logo{font-size:15px}
-  #search-wrap{padding:0 8px}
-  #q{font-size:13px;padding:6px}
-  #cart-btn{padding:6px 10px;font-size:12px;gap:4px}
-
-  /* 사이드바 숨기고 bottom nav 표시 */
-  #sidebar{display:none}
-  #bottom-nav{
-    display:flex;
-    position:fixed;bottom:0;left:0;right:0;
-    z-index:100;
-    background:#fff;
-    border-top:1px solid #d0d4ea;
-    box-shadow:0 -2px 8px rgba(0,0,0,.1);
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
-    height:56px;
-  }
-  #bottom-nav::-webkit-scrollbar{display:none}
-  .bn-item{
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    flex:1;min-width:52px;max-width:72px;
-    padding:4px 4px;cursor:pointer;
-    border-top:3px solid transparent;
-    gap:2px;transition:all .15s;color:#666;
-  }
-  .bn-item.active{border-top-color:#2456a4;color:#2456a4}
-  .bn-icon{font-size:18px;line-height:1}
-  .bn-label{font-size:9px;font-weight:600;white-space:nowrap;letter-spacing:-.5px;line-height:1.1}
-
-  /* 콘텐츠 */
-  #main-wrap{min-height:calc(100vh - 52px - 56px)}
-  #content{padding:10px 10px 66px}
-  #cart-panel{width:100%;right:-100%}
-  #cart-panel.open{right:0}
-
-  /* 그리드 — 2열 고정 */
+@media(max-width:600px){
   #prod-grid{grid-template-columns:repeat(2,1fr);gap:10px}
-  #sub-grid{grid-template-columns:repeat(3,1fr);gap:8px}
-  .sub-card{padding:10px 6px;font-size:12px}
-
-  /* 카드 */
-  .pcard-name{font-size:11px;-webkit-line-clamp:2}
-  .pcard-brand{font-size:10px}
-  .pcard-unit{font-size:10px}
-  .pcard-price{font-size:13px}
-  .pcard-btn{font-size:11px;padding:6px;margin:0 8px 8px}
-
-  /* 페이지네이션 */
-  #pagination{padding-bottom:8px;gap:4px}
-  .pg-btn{padding:6px 10px;font-size:12px}
-
-  /* 모달 */
-  #modal{padding:0;align-items:flex-end}
-  #modal-box{border-radius:16px 16px 0 0;max-height:85vh;padding:20px 16px}
-
-  /* 장바구니 */
-  .citem-img{width:44px;height:44px}
-  #cart-hdr{padding:12px 16px}
-  #cart-footer{padding:12px}
+  #cart-panel{width:100%}
 }
 </style>
 </head>
 <body>
 
-<!-- 로딩 -->
-<div id="loading">
-  <h2>🔧 한스코퍼레이션 자재주문</h2>
-  <div id="prog-bar-wrap"><div id="prog-bar"></div></div>
-  <div id="prog-text">상품 데이터 로딩 중...</div>
-</div>
-
 <!-- 헤더 -->
 <div id="hdr">
-  <div class="logo" id="logo" style="cursor:pointer;user-select:none" title="">한스<span>코퍼레이션</span></div>
+  <div class="logo" id="logo">한스<span>코퍼레이션</span></div>
   <div id="search-wrap">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input id="q" type="text" placeholder="상품명, 브랜드 검색...">
-    <button id="btn-clear-q" title="지우기">✕</button>
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="white" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+    <input id="q" type="text" placeholder="품명, 브랜드, 규격 검색..." autocomplete="off">
+    <button id="btn-clear-q" onclick="clearQ()">✕</button>
   </div>
-  <button id="cart-btn">
+  <button id="cart-btn" onclick="toggleCart()">
     🛒 장바구니
     <span id="cart-badge">0</span>
   </button>
 </div>
 
-<!-- 모바일 bottom nav (JS로 채움) -->
-<div id="bottom-nav"></div>
-
-<div id="main-wrap">
-  <!-- 대분류 사이드바 (데스크탑) -->
-  <div id="sidebar"></div>
-
-  <!-- 컨텐츠 -->
-  <div id="content">
-    <div id="breadcrumb"></div>
-    <div id="search-banner"></div>
-    <div id="sub-filter-wrap"><input id="sub-filter" type="text" placeholder="소분류 검색..."></div>
-    <div id="sub-grid"></div>
-    <div id="items-header" style="display:none">
-      <div id="items-count"></div>
-      <select id="sort-sel">
-        <option value="default">기본 정렬</option>
-        <option value="price-asc">가격 낮은순</option>
-        <option value="price-desc">가격 높은순</option>
-        <option value="name">이름순</option>
-      </select>
-    </div>
-    <div id="prod-grid"></div>
-    <div id="pagination"></div>
-  </div>
+<!-- 브랜드 필터 -->
+<div id="filter-bar">
+  <span class="fb-label">브랜드</span>
+  <div id="brand-chips"></div>
 </div>
 
-<!-- 오버레이 -->
-<div id="overlay"></div>
+<!-- 컨텐츠 -->
+<div id="content">
+  <div id="items-header">
+    <span id="items-count"></span>
+    <select id="sort-sel" onchange="renderGrid()">
+      <option value="no">기본순</option>
+      <option value="name">이름순</option>
+      <option value="price-asc">가격 낮은순</option>
+      <option value="price-desc">가격 높은순</option>
+    </select>
+  </div>
+  <div id="prod-grid"></div>
+  <div id="no-result">🔍 검색 결과가 없습니다.</div>
+</div>
+
+<!-- 장바구니 오버레이 -->
+<div id="overlay" onclick="closeCart()"></div>
 
 <!-- 장바구니 패널 -->
 <div id="cart-panel">
   <div id="cart-hdr">
     <h2>🛒 장바구니</h2>
-    <button id="cart-close">✕</button>
+    <button id="cart-close" onclick="closeCart()">✕</button>
   </div>
-  <div id="cart-body"></div>
+  <div id="cart-body">
+    <div id="cart-empty">장바구니가 비어 있습니다.</div>
+  </div>
   <div id="cart-footer">
-    <div id="cart-total-row">
-      <span>합계</span>
-      <span id="cart-total">₩0</span>
-    </div>
-    <div class="cart-action-btns">
-      <button id="btn-excel">📥 엑셀</button>
-      <button id="btn-email">📧 이메일</button>
-      <button id="btn-clear-cart">비우기</button>
+    <div class="total-row"><span>합계</span><span id="cart-total">₩0</span></div>
+    <div class="cart-actions">
+      <button id="btn-clear-cart" onclick="clearCart()">전체삭제</button>
+      <button id="btn-export" onclick="exportExcel()">📋 견적서 출력</button>
     </div>
   </div>
 </div>
 
-<!-- 상품 상세 모달 -->
-<div id="modal">
-  <div id="modal-box">
-    <button id="modal-close">✕</button>
+<!-- 상품 모달 -->
+<div id="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div id="modal">
+    <button id="modal-close" onclick="closeModal()">✕</button>
     <img id="modal-img" src="" alt="">
-    <div id="modal-name"></div>
     <div id="modal-brand"></div>
+    <div id="modal-name"></div>
+    <div id="modal-spec"></div>
     <div id="modal-code"></div>
-    <div id="modal-price"></div>
-    <div id="modal-unit"></div>
-    <div id="modal-qty-row">
-      <button class="qty-btn" id="modal-qty-minus">−</button>
-      <input id="modal-qty" type="number" value="1" min="1">
-      <button class="qty-btn" id="modal-qty-plus">+</button>
-      <button id="modal-add">장바구니 담기</button>
+    <div id="modal-price-row">
+      <div id="modal-price"></div>
+      <div id="modal-unit"></div>
     </div>
+    <div class="modal-qty-wrap">
+      <label>수량</label>
+      <button class="qty-btn" onclick="mQty(-1)">−</button>
+      <input id="modal-qty" type="number" value="1" min="1">
+      <button class="qty-btn" onclick="mQty(1)">+</button>
+    </div>
+    <button id="modal-add-btn" onclick="addFromModal()">장바구니 담기</button>
   </div>
 </div>
 
-<!-- 관리자 설정 모달 -->
-<div id="admin-modal" style="display:none;position:fixed;inset:0;z-index:400;align-items:center;justify-content:center;background:rgba(0,0,0,.5)">
-  <div style="background:#fff;border-radius:16px;padding:28px 24px;width:320px;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-    <div style="font-size:16px;font-weight:700;margin-bottom:4px">🔐 관리자 설정</div>
-    <div style="font-size:12px;color:#888;margin-bottom:20px">설정값은 이 기기에만 저장됩니다</div>
-    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">마진율 (%)</label>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <input id="admin-margin" type="number" min="0" max="100" step="0.5"
-        style="flex:1;border:1px solid #d0d4da;border-radius:8px;padding:10px 12px;font-size:18px;font-weight:700;text-align:center;outline:none">
-      <span style="font-size:18px;font-weight:700;color:#888">%</span>
-    </div>
-    <div style="font-size:11px;color:#aaa;margin-bottom:20px">예) 30 입력 시 공급가 × 1.3, 10원 단위 올림 적용</div>
-    <div style="display:flex;gap:8px">
-      <button onclick="saveAdminMargin()" style="flex:1;background:#2456a4;color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:700;cursor:pointer">저장</button>
-      <button onclick="closeAdmin()" style="flex:1;background:#f0f2f5;color:#555;border:none;border-radius:8px;padding:11px;font-size:14px;cursor:pointer">취소</button>
+<!-- 관리자 모달 -->
+<div id="admin-modal">
+  <div id="admin-box">
+    <h3>🔧 관리자 설정</h3>
+    <label>마진율 (%)</label>
+    <input id="admin-margin" type="number" min="0" max="300" step="0.1" placeholder="30">
+    <div class="admin-actions">
+      <button id="admin-cancel" onclick="closeAdmin()">취소</button>
+      <button id="admin-save" onclick="saveAdminMargin()">저장</button>
     </div>
   </div>
 </div>
 
 <script>
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  마진율: localStorage에서 로드, 기본값 30%
-//  (헤더 로고를 5번 빠르게 클릭하면 관리자 설정창)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ── 데이터 ──────────────────────────────────────────────────────
+const IMG_BASE = 'https://ctx.cretec.kr/CtxApp/resource/SBI_ITEM_IMG/';
 let MARGIN_RATE = parseFloat(localStorage.getItem('hs_margin') || '0.30');
-const IMG_BASE = './imgs/';
-const ORDER_EMAIL = 'kanghyun0225@gmail.com';
-const PAGE_SIZE = 48;
-const COMPANY_NAME = '한스코퍼레이션';
+function mp(raw){ return raw ? Math.ceil(raw*(1+MARGIN_RATE)/10)*10 : 0; }
+function fmt(n){ return '₩'+n.toLocaleString(); }
 
-// 공급단가 × (1+마진율) 후 10원 단위 올림
-function mp(raw){ return raw ? Math.ceil(raw * (1 + MARGIN_RATE) / 10) * 10 : 0; }
-function fmt(n){ return (+n).toLocaleString('ko-KR'); }
-// 가격 표시 (0이면 가격문의)
-function fmtPrice(raw){ const p=mp(raw); return p ? '₩'+fmt(p) : '가격문의'; }
+const ITEMS = [
+{"no":1,"code":"C182-8616","brand":"리빙엔젤","name":"테크트럭(무소음)","spec":"중","unit":"EA","price":47444,"imgId":"3376937"},
+{"no":2,"code":"C114-3010","brand":"스마토 핸드트럭","name":"핸드카","spec":"SM-HC01S","unit":"EA","price":93440,"imgId":"3380713"},
+{"no":3,"code":"C132-6172","brand":"한신망치","name":"각삽","spec":"HS-AGS501","unit":"EA","price":8540,"imgId":"3304853"},
+{"no":4,"code":"C132-6163","brand":"한신망치","name":"막삽","spec":"HS-AMS503","unit":"EA","price":8540,"imgId":"3304852"},
+{"no":5,"code":"C154-7085","brand":"아이지","name":"사다리(광폭가정용)","spec":"IGW-03","unit":"EA","price":53863,"imgId":"3407222"},
+{"no":6,"code":"C154-0514","brand":"아이지","name":"사다리(A형)","spec":"MT-05 (5단)","unit":"EA","price":54473,"imgId":"1126495"},
+{"no":7,"code":"C154-1115","brand":"서울금속","name":"사다리(다기능,LS형)","spec":"LS-5 (5단)","unit":"EA","price":132300,"imgId":"1305168"},
+{"no":8,"code":"C154-1319","brand":"서울금속","name":"사다리보강대","spec":"LS사다리용(1SET=4EA)","unit":"SET","price":29470,"imgId":"1305200"},
+{"no":9,"code":"C529-8406","brand":"효성펌프","name":"수중펌프","spec":"HGD-600MA","unit":"EA","price":228470,"imgId":"3402210"},
+{"no":10,"code":"W802-4705","brand":"쌍마","name":"저압나선호스","spec":"50MMx20M","unit":"EA","price":59928,"imgId":"3407359"},
+{"no":11,"code":"C415-1074","brand":"새한","name":"절연저항계(아날로그)","spec":"SH-1000M","unit":"EA","price":32200,"imgId":"1117902"},
+{"no":12,"code":"C415-1092","brand":"새한","name":"접지저항계(디지털)","spec":"SH-5030S","unit":"EA","price":193200,"imgId":"1218865"},
+{"no":13,"code":"C415-1001","brand":"새한","name":"디지털테스터(포켓)","spec":"SH-3230 (=ST3230)","unit":"EA","price":20370,"imgId":"1227551"},
+{"no":14,"code":"C100-3758","brand":"세신 공구집","name":"공구가방","spec":"SB-3002","unit":"EA","price":18144,"imgId":"1233839"},
+{"no":15,"code":"C100-2689","brand":"세신 공구함","name":"공구함","spec":"SB-T403","unit":"EA","price":12888,"imgId":"1240669"},
+{"no":16,"code":"C223-1561","brand":"스마토 가스토치","name":"가스토치","spec":"ST-209","unit":"EA","price":6240,"imgId":"3410657"},
+{"no":17,"code":"C100-4049","brand":"스마토 가위","name":"다목적가위","spec":"SM-MS8S","unit":"EA","price":3330,"imgId":"1268628"},
+{"no":18,"code":"C108-0669","brand":"세신","name":"롱노우즈플라이어","spec":"150mm (6\")","unit":"EA","price":6832,"imgId":"3273034"},
+{"no":19,"code":"C108-0641","brand":"세신","name":"펜치","spec":"200mm (8\")","unit":"EA","price":9504,"imgId":"1116923"},
+{"no":20,"code":"C108-0614","brand":"세신","name":"니퍼","spec":"160mm (6\")","unit":"EA","price":6645,"imgId":"3273006"},
+{"no":21,"code":"C220-0190","brand":"세신 압착기","name":"이지스트리퍼","spec":"SB-661T","unit":"EA","price":12312,"imgId":"1250713"},
+{"no":22,"code":"C220-0057","brand":"세신 압착기","name":"모듈러압착기","spec":"SB-568","unit":"EA","price":16416,"imgId":"1130668"},
+{"no":23,"code":"C100-3855","brand":"스마토 톱대","name":"톱대","spec":"BL-7012","unit":"EA","price":3940,"imgId":"1249324"},
+{"no":24,"code":"C247-0045","brand":"바코(샌드빅)","name":"톱날(HSS)","spec":"300mm (12\")*18T","unit":"EA","price":976,"imgId":"1119476"},
+{"no":25,"code":"C270-1459","brand":"백마","name":"쥐꼬리톱","spec":"J-210","unit":"EA","price":9044,"imgId":"3256979"},
+{"no":26,"code":"C132-0691","brand":"세신 망치","name":"고무망치","spec":"SB-RH66 (24oz)","unit":"EA","price":3902,"imgId":"1258025"},
+{"no":27,"code":"C100-2014","brand":"스마토 망치","name":"빠루망치(TPR자루)","spec":"450g (16oz)","unit":"EA","price":5016,"imgId":"1221550"},
+{"no":28,"code":"C108-9864","brand":"세신 망치","name":"돌망치","spec":"SBSL-420(장대)","unit":"EA","price":18144,"imgId":"3411725"},
+{"no":29,"code":"C104-0494","brand":"세신","name":"파이프렌치","spec":"300mm (12\")","unit":"EA","price":11520,"imgId":"1117018"},
+{"no":30,"code":"C104-0519","brand":"세신","name":"파이프렌치","spec":"450mm (18\")","unit":"EA","price":20520,"imgId":"1117018"},
+{"no":31,"code":"C104-0388","brand":"세신","name":"몽키","spec":"250mm (10\")","unit":"EA","price":8856,"imgId":"1116803"},
+{"no":32,"code":"C104-0403","brand":"세신","name":"몽키","spec":"375mm (15\")","unit":"EA","price":24048,"imgId":"1116805"},
+{"no":33,"code":"C102-1514","brand":"스마토 몽키","name":"포켓몽키(컬러그립)","spec":"SM-C10S (155mm)","unit":"EA","price":8050,"imgId":"1288929"},
+{"no":34,"code":"C231-0761","brand":"세신 드라이버","name":"시계드라이버세트","spec":"SB-PS6SP","unit":"SET","price":12600,"imgId":"3297947"},
+{"no":35,"code":"C260-0460","brand":"세신 드라이버","name":"다가네드라이버","spec":"3800 8*200(-)","unit":"EA","price":2808,"imgId":"1131156"},
+{"no":36,"code":"C262-0181","brand":"세신 드라이버","name":"주먹양용드라이버","spec":"SB-PSD65","unit":"EA","price":4075,"imgId":"1248462"},
+{"no":37,"code":"C260-1238","brand":"세신 드라이버","name":"전공양용드라이버","spec":"1100 (+)#2x(-)6-150","unit":"EA","price":3283,"imgId":"1297285"},
+{"no":38,"code":"C200-7830","brand":"지니어스핸드소켓","name":"핸드소켓세트","spec":"GS-416MA 1/2*8~27 16P","unit":"SET","price":82880,"imgId":"1114313"},
+{"no":39,"code":"C100-8887","brand":"세신 볼트커터","name":"볼트커터ARM타입","spec":"SB-BC450 (18\")","unit":"EA","price":13392,"imgId":"1200850"},
+{"no":40,"code":"C181-1670","brand":"신성툴스","name":"양손가위(조경)","spec":"SB-800A","unit":"EA","price":19448,"imgId":"3298575"},
+{"no":41,"code":"C505-8172","brand":"보쉬 비트","name":"다목적드릴비트세트","spec":"Promo-X line (33pcs)","unit":"SET","price":16051,"imgId":"1287834"},
+{"no":42,"code":"C344-0980","brand":"클리브랜드","name":"하이스드릴세트","spec":"13본조","unit":"SET","price":12285,"imgId":"3244236"},
+{"no":43,"code":"C538-6598","brand":"보쉬 비트","name":"SDS PLUS-5X 4날 비트","spec":"13-260","unit":"EA","price":10322,"imgId":"3407821"},
+{"no":44,"code":"C538-6765","brand":"보쉬 비트","name":"SDS PLUS-5X 4날 비트","spec":"17-310","unit":"EA","price":19950,"imgId":"3407821"},
+{"no":45,"code":"C394-0912","brand":"조란","name":"콘크리트드릴(육각)","spec":"3.0MM","unit":"EA","price":2425,"imgId":"3317234"},
+{"no":46,"code":"C394-0958","brand":"조란","name":"콘크리트드릴(육각)","spec":"6.0MM","unit":"EA","price":3282,"imgId":"3317234"},
+{"no":47,"code":"C394-0967","brand":"조란","name":"콘크리트드릴(육각)","spec":"6.5MM","unit":"EA","price":3376,"imgId":"3317234"},
+{"no":48,"code":"C400-1487","brand":"블루텍수평","name":"알루미늄자석수평","spec":"300mm (12\")","unit":"EA","price":6003,"imgId":"1249695"},
+{"no":49,"code":"C409-0287","brand":"코메론","name":"네오화이버줄자","spec":"KMC-330 (50M*13)","unit":"EA","price":17680,"imgId":"1115122"},
+{"no":50,"code":"C409-0135","brand":"코메론","name":"카멜레온줄자","spec":"KMC-15 (5.5M*19)","unit":"EA","price":6038,"imgId":"1115109"},
+{"no":51,"code":"C110-2961","brand":"세신 볼렌치","name":"볼렌치세트(엑스트라롱)","spec":"SB-BWS9EL","unit":"SET","price":17219,"imgId":"3334419"},
+{"no":52,"code":"C118-2453","brand":"세신 구리스펌프","name":"구리스펌프(권총형)","spec":"SB-GG500P","unit":"EA","price":19584,"imgId":"3340832"},
+{"no":53,"code":"C118-2462","brand":"세신 구리스펌프","name":"구리스(카트리지)","spec":"SB-CG400(400CC,SB-TGG500D포함 범용)","unit":"EA","price":5472,"imgId":"3340833"},
+{"no":54,"code":"W861-0609","brand":"쌍마장갑","name":"반코팅장갑","spec":"13G","unit":"조","price":219,"imgId":"3340415"},
+{"no":55,"code":"W861-0584","brand":"쌍마장갑","name":"목장갑","spec":"60G(백색)","unit":"조","price":202,"imgId":"3340409"},
+{"no":56,"code":"W825-4810","brand":"3M 안전장갑","name":"NBR폼코팅장갑","spec":"슈퍼그립200 회색L","unit":"조","price":1966,"imgId":"3213395"},
+{"no":57,"code":"W889-0065","brand":"제비표우의","name":"코트형우의SI-102","spec":"원피스 XL곤색","unit":"EA","price":8316,"imgId":"2279771"},
+{"no":58,"code":"W889-3132","brand":"제비표우의","name":"패션장화","spec":"패션남대장(275)","unit":"조","price":8442,"imgId":"3265195"},
+{"no":59,"code":"W889-3114","brand":"제비표우의","name":"패션장화","spec":"패션남대장(265)","unit":"조","price":8442,"imgId":"3265195"},
+{"no":60,"code":"C132-0220","brand":"한신망치","name":"오해머","spec":"YGL-60S (8LBS)","unit":"EA","price":25340,"imgId":"1223144"},
+{"no":61,"code":"C102-1763","brand":"스마토 빠루","name":"육각빠루(보급형)","spec":"SM-16W1000 (1000MM)","unit":"EA","price":8911,"imgId":"1294026"},
+{"no":62,"code":"W893-6978","brand":"3M 테이프","name":"절연테이프","spec":"검정 19*10M #170","unit":"EA","price":514,"imgId":"3415810"},
+{"no":63,"code":"C100-2227","brand":"스마토 테프론테이프","name":"테프론테이프(보급형)","spec":"SMT-TT1","unit":"EA","price":178,"imgId":"1240329"},
+{"no":64,"code":"W102-2957","brand":"smato 케이블타이","name":"케이블타이","spec":"100mm 흑색(1000EA)","unit":"봉","price":2368,"imgId":"2301840"},
+{"no":65,"code":"W102-3691","brand":"smato 케이블타이","name":"케이블타이","spec":"140mm 흑색(1000EA)","unit":"봉","price":5525,"imgId":"2301840"},
+{"no":66,"code":"W102-2975","brand":"smato 케이블타이","name":"케이블타이","spec":"200mm 흑색(1000EA)","unit":"봉","price":10710,"imgId":"2301840"},
+{"no":67,"code":"W102-3053","brand":"smato 케이블타이","name":"케이블타이","spec":"300mm 흑색(500EA)","unit":"봉","price":9765,"imgId":"2301840"},
+{"no":68,"code":"W102-3275","brand":"smato 케이블타이","name":"케이블타이","spec":"370mm 흑색(300EA)","unit":"봉","price":10521,"imgId":"2301840"},
+{"no":69,"code":"C116-2538","brand":"스마토 칼브럭","name":"칼브럭","spec":"6x35mm 200EA(F/D적색)","unit":"봉","price":1288,"imgId":"3349200"},
+{"no":70,"code":"C169-1641","brand":"명화금속","name":"직결피스(와셔형)","spec":"8x13W 500EA","unit":"봉","price":3922,"imgId":"1207342"},
+{"no":71,"code":"C169-1669","brand":"명화금속","name":"직결피스(와셔형)","spec":"8x20W 500EA","unit":"봉","price":6014,"imgId":"1207342"},
+{"no":72,"code":"C169-1687","brand":"명화금속","name":"직결피스(와셔형)","spec":"8x32W 500EA","unit":"봉","price":8906,"imgId":"1207342"},
+{"no":73,"code":"C169-4301","brand":"명화금속","name":"직결피스(접시형)","spec":"8x13F 500EA","unit":"봉","price":3922,"imgId":"3282460"},
+{"no":74,"code":"C169-4329","brand":"명화금속","name":"직결피스(접시형)","spec":"8x20F 500EA","unit":"봉","price":6014,"imgId":"3282460"},
+{"no":75,"code":"C169-4347","brand":"명화금속","name":"직결피스(접시형)","spec":"8x32F 500EA","unit":"봉","price":8906,"imgId":"3282460"},
+{"no":76,"code":"W118-6006","brand":"smato 실리콘건","name":"실리콘건","spec":"SMC-101","unit":"EA","price":1717,"imgId":"3349599"},
+{"no":77,"code":"W868-0936","brand":"모아실리콘","name":"실리콘(무초산)","spec":"E-7000반투명 270ml","unit":"EA","price":1860,"imgId":"2295830"},
+{"no":78,"code":"C142-0405","brand":"벡셀","name":"건전지(알카라인)","spec":"LR03(AAA) (1판=2EA)비닐포장","unit":"판","price":585,"imgId":"1314780"},
+{"no":79,"code":"C142-0414","brand":"벡셀","name":"건전지(알카라인)","spec":"LR6(AA) (1판=2EA)비닐포장","unit":"판","price":585,"imgId":"1314781"},
+{"no":80,"code":"W810-5417","brand":"록타이트 AG","name":"순간접착제","spec":"401*20g Blister (459962)","unit":"EA","price":2869,"imgId":"3356930"},
+{"no":81,"code":"W815-0028","brand":"벡스","name":"윤활방청제","spec":"WD-40 360ml","unit":"EA","price":4467,"imgId":"2261035"},
+{"no":82,"code":"W820-0536","brand":"일신","name":"스티커 점착 제거제","spec":"IS-7510 420ml","unit":"EA","price":3800,"imgId":"3224968"},
+{"no":83,"code":"W851-0099","brand":"에스탑","name":"안전모","spec":"H101투구자동백색","unit":"EA","price":3854,"imgId":"2200082"},
+{"no":84,"code":"W825-2779","brand":"3M 마스크","name":"보안경","spec":"OX1000","unit":"EA","price":4818,"imgId":"2307482"},
+{"no":85,"code":"W891-1377","brand":"디더블유안전","name":"안전띠","spec":"위험테이프 백색","unit":"EA","price":5796,"imgId":"3329467"},
+{"no":86,"code":"W854-3547","brand":"smato 안전벨트","name":"전체식허리그네","spec":"DMS202-3SB ST대구경 엘라 원터치버클","unit":"EA","price":32508,"imgId":"3355756"},
+{"no":87,"code":"W103-5243","brand":"smato 도로용품","name":"플라스틱체인","spec":"8MMX45M 형광연두 (롤)","unit":"EA","price":40077,"imgId":"3218601"},
+{"no":88,"code":"C135-0610","brand":"엑소","name":"핫멜트건","spec":"GR-60 (40W)","unit":"EA","price":13650,"imgId":"1120375"},
+{"no":89,"code":"C280-0121","brand":"세신 글루건","name":"막대본드","spec":"SB-GS11 11mm*270 (1KG/백색) 35~37EA","unit":"봉","price":9360,"imgId":"3268052"},
+{"no":90,"code":"C103-5988","brand":"스마토 라이트","name":"충전라이트(LED)","spec":"SLR-1000LMZ","unit":"EA","price":16120,"imgId":"3220883"},
+{"no":91,"code":"W112-4617","brand":"smato 작업등","name":"작업등-LED","spec":"WL-301-2 (충전식)","unit":"EA","price":14960,"imgId":"3270707"},
+{"no":92,"code":"W103-2200","brand":"smato 전선릴","name":"전선릴","spec":"SMATO-G-1550 (1.5x50)","unit":"EA","price":83640,"imgId":"3258557"},
+{"no":93,"code":"C575-4382","brand":"디월트","name":"충전그라인더","spec":"DCG407N 125mm 20V","unit":"EA","price":155000,"imgId":"3440843"},
+{"no":94,"code":"C510-4213","brand":"디월트","name":"충전콤보세트","spec":"DCK2062P2(20V/5.0Ah) DCD709N+DCF809N","unit":"SET","price":483120,"imgId":"3344085"},
+{"no":95,"code":"C538-7135","brand":"보쉬 유선","name":"해머드릴(경량)","spec":"GBH2-26","unit":"EA","price":175120,"imgId":"3410566"},
+{"no":96,"code":"W117-4126","brand":"smato 호스","name":"편사호스","spec":"16MMx45M","unit":"EA","price":23100,"imgId":"3318681"},
+{"no":97,"code":"C188-1244","brand":"스마토 물호스","name":"분사기","spec":"ASG-6","unit":"EA","price":4416,"imgId":"3434082"},
+{"no":98,"code":"W802-3636","brand":"쌍마","name":"천막호스","spec":"50MM(2\")X70M","unit":"EA","price":18876,"imgId":"3282852"},
+{"no":99,"code":"C510-8413","brand":"디월트AC","name":"소켓어댑터","spec":"DW2547IRG 13mm(1/2\")","unit":"EA","price":2892,"imgId":"3385432"},
+{"no":100,"code":"C263-6076","brand":"베셀","name":"도금비트날","spec":"ASG-1426110M(6*110MM)","unit":"EA","price":3052,"imgId":"1121633"},
+{"no":101,"code":"C263-6094","brand":"베셀","name":"도금비트날","spec":"ASG-1426200M(6*200MM)","unit":"EA","price":5737,"imgId":"1121633"},
+{"no":102,"code":"C205-2496","brand":"세신","name":"라쳇콤비렌치세트(TAIWAN)","spec":"12PCS(8~19mm)","unit":"SET","price":87120,"imgId":"3334941"}
+];
 
-const MAIN_ICONS = ['🔧','🔩','⚙️','📐','⚡','💨','🔥','🦺','🏭'];
-// 모바일 bottom nav용 짧은 레이블 (9자 이내)
-const SHORT_LABELS = ['공구','철물','절삭','측정','전동','에어','용접','안전','산업'];
+// ── 상태 ──────────────────────────────────────────────────────
+let state = { q:'', brand:'전체', modalCode:null };
+let cart = {};  // code → {item, qty}
 
-let DB = null;
-let cart = {}; // { prod_cd: { item, qty } }
-let state = { mainIdx: null, catIdx: null, page: 0, q: '', sort: 'default' };
-let filteredItems = [];
-let modalItem = null;
-let subCatsCache = [];
+// ── 브랜드 목록 ──────────────────────────────────────────────
+const brands = ['전체', ...new Set(ITEMS.map(i => i.brand))];
+function buildBrandChips() {
+  const wrap = document.getElementById('brand-chips');
+  wrap.innerHTML = brands.map(b =>
+    `<span class="brand-chip${b==='전체'?' active':''}" onclick="selectBrand('${b}')">${b}</span>`
+  ).join('');
+}
+function selectBrand(b) {
+  state.brand = b;
+  document.querySelectorAll('.brand-chip').forEach(el => {
+    el.classList.toggle('active', el.textContent === b);
+  });
+  renderGrid();
+}
 
-// ──────────────────────────────────────
-// 데이터 로딩
-// ──────────────────────────────────────
-async function loadData(){
-  const resp = await fetch('./cretec_lite.json?v=3');
-  const total = +resp.headers.get('content-length') || 0;
-  const reader = resp.body.getReader();
-  let chunks = [], received = 0;
-  while(true){
-    const {done, value} = await reader.read();
-    if(done) break;
-    chunks.push(value);
-    received += value.length;
-    if(total){
-      const pct = Math.round(received/total*100);
-      document.getElementById('prog-bar').style.width = pct+'%';
-      document.getElementById('prog-text').textContent =
-        `${Math.round(received/1024/1024*10)/10}MB / ${Math.round(total/1024/1024*10)/10}MB`;
+// ── 필터링 ──────────────────────────────────────────────────
+function getFiltered() {
+  const q = state.q.toLowerCase().trim();
+  return ITEMS.filter(it => {
+    if (state.brand !== '전체' && it.brand !== state.brand) return false;
+    if (q) {
+      const hay = (it.name+' '+it.brand+' '+it.spec+' '+it.code).toLowerCase();
+      return q.split(/\s+/).every(w => hay.includes(w));
     }
-  }
-  const raw = new Uint8Array(received);
-  let offset=0;
-  for(const c of chunks){ raw.set(c,offset); offset+=c.length; }
-  DB = JSON.parse(new TextDecoder().decode(raw));
-
-  // 검색 인덱스
-  DB.namesLower = DB.items.map(it=>it[1].toLowerCase());
-  DB.brandsLower = DB.items.map(it=>(DB.brands[it[2]]||'').toLowerCase());
-
-  // 소분류별 상품 수
-  DB.catCount = new Array(DB.cats.length).fill(0);
-  for(const it of DB.items) DB.catCount[it[6]]++;
-
-  // 빠른 조회: prod_cd → item
-  DB.codeMap = {};
-  for(const it of DB.items) DB.codeMap[it[0]] = it;
-
-  document.getElementById('loading').style.display='none';
-  initSidebar();
-  render();
-}
-
-// ──────────────────────────────────────
-// 사이드바
-// ──────────────────────────────────────
-function initSidebar(){
-  // 데스크탑 사이드바
-  const sb = document.getElementById('sidebar');
-  sb.innerHTML = DB.mains.map((m,i)=>`
-    <div class="main-item" data-mi="${i}" onclick="selectMain(${i})">
-      <div class="main-icon">${MAIN_ICONS[i]}</div>
-      <div class="main-label">${m}</div>
-    </div>`).join('');
-
-  // 모바일 bottom nav
-  const bn = document.getElementById('bottom-nav');
-  bn.innerHTML = DB.mains.map((m,i)=>`
-    <div class="bn-item" data-mi="${i}" onclick="selectMain(${i})">
-      <div class="bn-icon">${MAIN_ICONS[i]}</div>
-      <div class="bn-label">${SHORT_LABELS[i]}</div>
-    </div>`).join('');
-}
-
-function selectMain(idx){
-  state.mainIdx = idx; state.catIdx = null; state.page = 0;
-  state.q = ''; document.getElementById('q').value = '';
-  document.getElementById('btn-clear-q').style.display='none';
-  render();
-}
-
-function selectCat(idx){
-  state.catIdx = idx; state.page = 0; render();
-}
-
-function goHome(){
-  state.mainIdx = null; state.catIdx = null; state.page = 0;
-  state.q = ''; document.getElementById('q').value = '';
-  document.getElementById('btn-clear-q').style.display='none';
-  render();
-}
-
-// ──────────────────────────────────────
-// 메인 렌더
-// ──────────────────────────────────────
-function render(){
-  updateSidebarActive();
-  const isSearch = state.q.length >= 2;
-  if(isSearch)             renderSearch();
-  else if(state.mainIdx === null) renderHome();
-  else if(state.catIdx === null)  renderSubGrid();
-  else                     renderProducts();
-  renderBreadcrumb();
-  renderCartBadge();
-}
-
-function updateSidebarActive(){
-  document.querySelectorAll('.main-item, .bn-item').forEach(el=>{
-    el.classList.toggle('active', +el.dataset.mi === state.mainIdx);
+    return true;
   });
 }
 
-// 홈 (9개 대분류 타일)
-function renderHome(){
-  document.getElementById('sub-filter-wrap').style.display='none';
-  document.getElementById('search-banner').style.display='none';
-  document.getElementById('items-header').style.display='none';
-  document.getElementById('pagination').innerHTML='';
-  document.getElementById('prod-grid').innerHTML='';
+// ── 정렬 ──────────────────────────────────────────────────
+function getSorted(items) {
+  const s = document.getElementById('sort-sel').value;
+  return [...items].sort((a,b) => {
+    if (s==='name') return a.name.localeCompare(b.name);
+    if (s==='price-asc') return a.price - b.price;
+    if (s==='price-desc') return b.price - a.price;
+    return a.no - b.no;
+  });
+}
 
-  const grid = document.getElementById('sub-grid');
-  grid.innerHTML = DB.mains.map((m,i)=>{
-    let cnt=0;
-    DB.catMain.forEach((mi,ci)=>{ if(mi===i) cnt+=DB.catCount[ci]||0; });
-    return `<div class="sub-card" onclick="selectMain(${i})" style="padding:20px 12px">
-      <div style="font-size:36px;margin-bottom:8px">${MAIN_ICONS[i]}</div>
-      <div style="font-weight:600;font-size:14px">${m}</div>
-      <div class="sub-count">${fmt(cnt)}개 상품</div>
+// ── 그리드 렌더링 ──────────────────────────────────────────
+function renderGrid() {
+  const filtered = getSorted(getFiltered());
+  const grid = document.getElementById('prod-grid');
+  const noR = document.getElementById('no-result');
+  document.getElementById('items-count').textContent = `총 ${filtered.length}개 상품`;
+
+  if (!filtered.length) {
+    grid.innerHTML = '';
+    noR.style.display = 'block';
+    return;
+  }
+  noR.style.display = 'none';
+
+  grid.innerHTML = filtered.map(it => {
+    const imgUrl = IMG_BASE + it.imgId + '-2-3.jpg';
+    const sellPrice = mp(it.price);
+    return `<div class="pcard" onclick="openModal('${it.code}')">
+      <img class="pcard-img" src="${imgUrl}" alt="${it.name}" loading="lazy"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="pcard-img-err">📦</div>
+      <div class="pcard-body">
+        <div class="pcard-brand">${it.brand}</div>
+        <div class="pcard-name">${it.name}</div>
+        <div class="pcard-spec">${it.spec}</div>
+        <div class="pcard-price">${fmt(sellPrice)}</div>
+        <div class="pcard-unit">/ ${it.unit}</div>
+      </div>
+      <button class="pcard-btn" onclick="event.stopPropagation();quickAdd('${it.code}')">+ 담기</button>
     </div>`;
   }).join('');
 }
 
-// 소분류 그리드
-function renderSubGrid(){
-  document.getElementById('items-header').style.display='none';
-  document.getElementById('pagination').innerHTML='';
-  document.getElementById('prod-grid').innerHTML='';
-  document.getElementById('search-banner').style.display='none';
-
-  subCatsCache = [];
-  DB.cats.forEach((name,ci)=>{
-    if(DB.catMain[ci]===state.mainIdx && DB.catCount[ci]>0)
-      subCatsCache.push({name,ci,cnt:DB.catCount[ci]});
-  });
-  subCatsCache.sort((a,b)=>b.cnt-a.cnt);
-
-  const sfWrap = document.getElementById('sub-filter-wrap');
-  if(subCatsCache.length >= 20){
-    sfWrap.style.display='block';
-    document.getElementById('sub-filter').value='';
-  } else {
-    sfWrap.style.display='none';
-  }
-  renderSubCards();
+// ── 검색 ──────────────────────────────────────────────────
+document.getElementById('q').addEventListener('input', e => {
+  state.q = e.target.value;
+  document.getElementById('btn-clear-q').style.display = state.q ? 'block' : 'none';
+  renderGrid();
+});
+function clearQ() {
+  state.q = '';
+  document.getElementById('q').value = '';
+  document.getElementById('btn-clear-q').style.display = 'none';
+  renderGrid();
 }
 
-function renderSubCards(){
-  const qsub = (document.getElementById('sub-filter').value||'').trim().toLowerCase();
-  const filtered = qsub ? subCatsCache.filter(s=>s.name.toLowerCase().includes(qsub)) : subCatsCache;
-  const grid = document.getElementById('sub-grid');
-  if(filtered.length===0){
-    grid.innerHTML='<div class="empty-state"><div class="icon">🔍</div><p>검색 결과 없음</p></div>';
+// ── 장바구니 ──────────────────────────────────────────────
+function quickAdd(code) {
+  if (!cart[code]) cart[code] = { item: ITEMS.find(i=>i.code===code), qty:1 };
+  else cart[code].qty++;
+  updateCart();
+}
+function updateCart() {
+  const keys = Object.keys(cart);
+  const badge = document.getElementById('cart-badge');
+  const total = keys.reduce((s,k) => s + cart[k].qty, 0);
+  badge.textContent = total;
+  badge.style.display = total ? 'inline' : 'none';
+
+  const body = document.getElementById('cart-body');
+  const empty = document.getElementById('cart-empty');
+  if (!keys.length) {
+    body.innerHTML = '';
+    body.appendChild(empty);
+    empty.style.display = 'block';
+    document.getElementById('cart-total').textContent = fmt(0);
     return;
   }
-  grid.innerHTML = filtered.map(s=>`
-    <div class="sub-card" onclick="selectCat(${s.ci})">
-      <div>${s.name}</div>
-      <div class="sub-count">${fmt(s.cnt)}개</div>
-    </div>`).join('');
-}
+  empty.style.display = 'none';
 
-// 상품 목록
-function renderProducts(){
-  document.getElementById('sub-grid').innerHTML='';
-  document.getElementById('sub-filter-wrap').style.display='none';
-  document.getElementById('search-banner').style.display='none';
-  filteredItems = sortItems(DB.items.filter(it=>it[6]===state.catIdx));
-  showItemsPage();
-}
-
-// 검색 결과
-function renderSearch(){
-  document.getElementById('sub-grid').innerHTML='';
-  document.getElementById('sub-filter-wrap').style.display='none';
-  const q = state.q.toLowerCase();
-  const hits = [];
-  for(let i=0;i<DB.items.length;i++){
-    if(DB.namesLower[i].includes(q)||DB.brandsLower[i].includes(q)) hits.push(DB.items[i]);
-  }
-  filteredItems = sortItems(hits);
-  const banner = document.getElementById('search-banner');
-  banner.style.display='block';
-  banner.textContent = `"${state.q}" 검색 결과: ${fmt(filteredItems.length)}개`;
-  showItemsPage();
-}
-
-function sortItems(items){
-  const s = state.sort;
-  if(s==='price-asc')  return [...items].sort((a,b)=>a[3]-b[3]);
-  if(s==='price-desc') return [...items].sort((a,b)=>b[3]-a[3]);
-  if(s==='name')       return [...items].sort((a,b)=>a[1].localeCompare(b[1],'ko'));
-  return items;
-}
-
-function showItemsPage(){
-  const total = filteredItems.length;
-  const totalPages = Math.max(1, Math.ceil(total/PAGE_SIZE));
-  state.page = Math.min(state.page, totalPages-1);
-  const slice = filteredItems.slice(state.page*PAGE_SIZE, (state.page+1)*PAGE_SIZE);
-
-  const ih = document.getElementById('items-header');
-  ih.style.display = 'flex';
-  document.getElementById('items-count').textContent = `${fmt(total)}개 상품`;
-
-  const grid = document.getElementById('prod-grid');
-  if(slice.length===0){
-    grid.innerHTML='<div class="empty-state"><div class="icon">📦</div><p>상품이 없습니다</p></div>';
-    document.getElementById('pagination').innerHTML='';
-    return;
-  }
-  grid.innerHTML = slice.map(buildCard).join('');
-  renderPagination(totalPages);
-  window.scrollTo({top:56,behavior:'smooth'});
-}
-
-function cleanBrand(raw){
-  // 보관함 HTML 쓰레기 제거: \n, \t, "최근 주문일:..." 등
-  return (raw||'').replace(/\s*최근 주문일:[^\n]*/g,'').replace(/[\n\t]/g,' ').replace(/\s+/g,' ').trim();
-}
-
-function buildCard(it){
-  const [cd,name,bi,price,unit,imgid,,spec] = it;
-  const brand = cleanBrand(DB.brands[bi]);
-  const p = mp(price);
-  const imgUrl = IMG_BASE+imgid+'-2-3.jpg';
-  const esc = s=>s.replace(/'/g,"\\'");
-  return `<div class="pcard" onclick="openModal('${esc(cd)}')">
-    <img class="pcard-img" src="${imgUrl}" alt="" loading="lazy"
-      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-    <div class="pcard-img-err">📦</div>
-    <div class="pcard-body">
-      <div class="pcard-name" title="${esc(name)}">${name}</div>
-      ${spec ? `<div class="pcard-unit"><span class="unit-label">규격</span> ${spec}</div>` : ''}
-      ${unit ? `<div class="pcard-unit" style="color:#888;font-size:10px"><span class="unit-label" style="background:#f0f0f0;color:#666">단위</span> ${unit}</div>` : ''}
-      <div class="pcard-brand">${brand}</div>
-      <div class="pcard-price">${p ? '₩'+fmt(p) : '<span style="color:#999;font-size:11px">가격문의</span>'}</div>
-    </div>
-    <button class="pcard-btn" onclick="event.stopPropagation();quickAdd('${esc(cd)}')">+ 담기</button>
-  </div>`;
-}
-
-function renderPagination(totalPages){
-  if(totalPages<=1){document.getElementById('pagination').innerHTML='';return;}
-  const p=state.page;
-  let html=`<button class="pg-btn" onclick="goPage(0)" ${p===0?'disabled':''}>◀◀</button>`;
-  html+=`<button class="pg-btn" onclick="goPage(${p-1})" ${p===0?'disabled':''}>◀</button>`;
-  const start=Math.max(0,p-3), end=Math.min(totalPages-1,p+3);
-  for(let i=start;i<=end;i++)
-    html+=`<button class="pg-btn ${i===p?'active':''}" onclick="goPage(${i})">${i+1}</button>`;
-  html+=`<button class="pg-btn" onclick="goPage(${p+1})" ${p===totalPages-1?'disabled':''}>▶</button>`;
-  html+=`<button class="pg-btn" onclick="goPage(${totalPages-1})" ${p===totalPages-1?'disabled':''}>▶▶</button>`;
-  document.getElementById('pagination').innerHTML=html;
-}
-
-function goPage(n){state.page=n;showItemsPage();}
-
-// ──────────────────────────────────────
-// 브레드크럼
-// ──────────────────────────────────────
-function renderBreadcrumb(){
-  const el = document.getElementById('breadcrumb');
-  const isSearch = state.q.length >= 2;
-  if(isSearch){
-    el.innerHTML=`<span class="crumb" onclick="goHome()">홈</span><span class="sep">›</span><span class="current">검색: "${state.q}"</span>`;
-    return;
-  }
-  if(state.mainIdx===null){el.innerHTML='<span class="current">전체 카테고리</span>';return;}
-  let html=`<span class="crumb" onclick="goHome()">홈</span><span class="sep">›</span>`;
-  if(state.catIdx===null){
-    html+=`<span class="current">${DB.mains[state.mainIdx]}</span>`;
-  } else {
-    html+=`<span class="crumb" onclick="selectMain(${state.mainIdx})">${DB.mains[state.mainIdx]}</span>`;
-    html+=`<span class="sep">›</span><span class="current">${DB.cats[state.catIdx]}</span>`;
-  }
-  el.innerHTML=html;
-}
-
-// ──────────────────────────────────────
-// 모달
-// ──────────────────────────────────────
-function openModal(cd){
-  const it = DB.codeMap[cd];
-  if(!it) return;
-  modalItem = it;
-  const [,name,bi,price,unit,imgid,,spec] = it;
-  const mImgEl = document.getElementById('modal-img');
-  mImgEl.src = IMG_BASE+imgid+'-2-3.jpg';
-  mImgEl.onerror = function(){this.src='';this.onerror=null;};
-  document.getElementById('modal-name').textContent = name;
-  document.getElementById('modal-brand').textContent = cleanBrand(DB.brands[bi]);
-  document.getElementById('modal-code').textContent = '품번: '+cd;
-  document.getElementById('modal-price').textContent = fmtPrice(price);
-  const unitEl = document.getElementById('modal-unit');
-  unitEl.innerHTML = (spec ? `<span style="color:#2456a4;font-weight:600">규격: ${spec}</span>　` : '') + (unit ? `단위: ${unit}` : '');
-  const step = unitStep(unit);
-  document.getElementById('modal-qty').value = cart[cd]?.qty || step;
-  document.getElementById('modal-qty').step = step;
-  document.getElementById('modal-qty').min = step;
-  document.getElementById('modal').classList.add('show');
-}
-
-// 단위에서 수량 step 추출 (예: "10 / 조" → 10, "1 / EA" → 1)
-function unitStep(unit){
-  if(!unit) return 1;
-  const m = (unit+'').match(/^(\d+)/);
-  return (m && parseInt(m[1]) > 1) ? parseInt(m[1]) : 1;
-}
-
-document.getElementById('modal-close').onclick = ()=>document.getElementById('modal').classList.remove('show');
-document.getElementById('modal').onclick = e=>{if(e.target.id==='modal')document.getElementById('modal').classList.remove('show');};
-document.getElementById('modal-qty-minus').onclick = ()=>{
-  if(!modalItem) return;
-  const inp = document.getElementById('modal-qty');
-  const step = unitStep(modalItem[4]);
-  const cur = +inp.value;
-  inp.value = Math.max(step, cur - step);
-};
-document.getElementById('modal-qty-plus').onclick = ()=>{
-  if(!modalItem) return;
-  const inp = document.getElementById('modal-qty');
-  const step = unitStep(modalItem[4]);
-  inp.value = +inp.value + step;
-};
-document.getElementById('modal-add').onclick = ()=>{
-  if(!modalItem) return;
-  const step = unitStep(modalItem[4]);
-  const qty = Math.max(step, +document.getElementById('modal-qty').value || step);
-  addToCart(modalItem[0], qty);
-  document.getElementById('modal').classList.remove('show');
-};
-
-// ──────────────────────────────────────
-// 장바구니
-// ──────────────────────────────────────
-function quickAdd(cd){
-  const it = DB?.codeMap[cd]; if(!it) return;
-  addToCart(cd, unitStep(it[4]));
-}
-
-function addToCart(cd, qty){
-  if(!DB) return;
-  const it = DB.codeMap[cd];
-  if(!it) return;
-  if(cart[cd]) cart[cd].qty += qty;
-  else cart[cd] = {item:it, qty};
-  renderCartBadge();
-  flashBadge();
-}
-
-function flashBadge(){
-  const b=document.getElementById('cart-badge');
-  b.style.transform='scale(1.5)';
-  setTimeout(()=>b.style.transform='',200);
-}
-
-function renderCartBadge(){
-  const entries=Object.values(cart);
-  const totalQty=entries.reduce((s,e)=>s+e.qty,0);
-  const badge=document.getElementById('cart-badge');
-  badge.textContent=totalQty;
-  badge.style.display=totalQty>0?'inline-block':'none';
-}
-
-function renderCartPanel(){
-  const entries=Object.values(cart);
-  const totalAmt=entries.reduce((s,e)=>s+mp(e.item[3])*e.qty,0);
-  document.getElementById('cart-total').textContent='₩'+fmt(totalAmt);
-  const body=document.getElementById('cart-body');
-  if(entries.length===0){
-    body.innerHTML='<div class="empty-state"><div class="icon">🛒</div><p>장바구니가 비어 있습니다</p></div>';
-    return;
-  }
-  body.innerHTML=entries.map(({item,qty})=>{
-    const [cd,name,bi,price,unit,imgid]=item;
-    const p=mp(price);
-    const esc=s=>s.replace(/'/g,"\\'");
-    return `<div class="citem">
-      <img class="citem-img" src="${IMG_BASE+imgid+'-2-3.jpg'}" alt=""
-        onerror="this.style.background='#eee';this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';this.onerror=null">
+  let html = '';
+  let grandTotal = 0;
+  keys.forEach(code => {
+    const {item, qty} = cart[code];
+    const p = mp(item.price);
+    const sub = p * qty;
+    grandTotal += sub;
+    const imgUrl = IMG_BASE + item.imgId + '-2-3.jpg';
+    html += `<div class="citem">
+      <img class="citem-img" src="${imgUrl}" alt="" onerror="this.src=''">
       <div class="citem-info">
-        <div class="citem-name">${name}</div>
-        <div class="citem-price">₩${fmt(p)} × ${qty} = ₩${fmt(p*qty)}</div>
+        <div class="citem-name">${item.name}</div>
+        <div class="citem-spec">${item.spec}</div>
+        <div class="citem-price">${fmt(p)} / ${item.unit}</div>
         <div class="citem-ctrl">
-          <button class="qty-btn" onclick="changeQty('${esc(cd)}',-1)">−</button>
+          <button class="qty-btn" onclick="changeQty('${code}',-1)">−</button>
           <span class="qty-val">${qty}</span>
-          <button class="qty-btn" onclick="changeQty('${esc(cd)}',1)">+</button>
-          <button class="citem-del" onclick="removeCart('${esc(cd)}')">✕</button>
+          <button class="qty-btn" onclick="changeQty('${code}',1)">+</button>
+          <span style="margin-left:4px;font-size:12px;color:#888">= ${fmt(sub)}</span>
         </div>
       </div>
+      <button class="citem-del" onclick="removeItem('${code}')">🗑</button>
     </div>`;
-  }).join('');
+  });
+  body.innerHTML = html;
+  document.getElementById('cart-total').textContent = fmt(grandTotal);
 }
-
-function changeQty(cd, dir){
-  if(!cart[cd]) return;
-  const step = unitStep(cart[cd].item[4]);
-  cart[cd].qty = Math.max(step, cart[cd].qty + dir * step);
-  renderCartBadge(); renderCartPanel();
+function changeQty(code, d) {
+  if (!cart[code]) return;
+  cart[code].qty = Math.max(1, cart[code].qty + d);
+  updateCart();
 }
-function removeCart(cd){ delete cart[cd]; renderCartBadge(); renderCartPanel(); }
-
-// 장바구니 열기/닫기
-document.getElementById('cart-btn').onclick=()=>{
-  renderCartPanel();
-  document.getElementById('cart-panel').classList.add('open');
-  document.getElementById('overlay').classList.add('show');
-};
-function closeCart(){
+function removeItem(code) {
+  delete cart[code];
+  updateCart();
+}
+function clearCart() {
+  if (!Object.keys(cart).length) return;
+  if (!confirm('장바구니를 비우겠습니까?')) return;
+  cart = {};
+  updateCart();
+}
+function toggleCart() {
+  const panel = document.getElementById('cart-panel');
+  const ov = document.getElementById('overlay');
+  panel.classList.toggle('open');
+  ov.classList.toggle('open');
+}
+function closeCart() {
   document.getElementById('cart-panel').classList.remove('open');
-  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('overlay').classList.remove('open');
 }
-document.getElementById('cart-close').onclick=closeCart;
-document.getElementById('overlay').onclick=closeCart;
-document.getElementById('btn-clear-cart').onclick=()=>{cart={};renderCartBadge();renderCartPanel();};
 
-// ──────────────────────────────────────
-// 관리자 패널 (로고 5번 빠른 클릭)
-// ──────────────────────────────────────
-let _logoCnt=0, _logoTimer;
-document.getElementById('logo').addEventListener('click',()=>{
+// ── 모달 ──────────────────────────────────────────────────
+function openModal(code) {
+  const it = ITEMS.find(i => i.code === code);
+  if (!it) return;
+  state.modalCode = code;
+  const imgUrl = IMG_BASE + it.imgId + '-2-3.jpg';
+  const el = document.getElementById('modal-img');
+  el.src = imgUrl;
+  el.onerror = function(){ this.src=''; this.onerror=null; };
+  document.getElementById('modal-brand').textContent = it.brand;
+  document.getElementById('modal-name').textContent = it.name;
+  document.getElementById('modal-spec').textContent = it.spec;
+  document.getElementById('modal-code').textContent = '상품코드: ' + it.code;
+  document.getElementById('modal-price').textContent = fmt(mp(it.price));
+  document.getElementById('modal-unit').textContent = '/ ' + it.unit;
+  document.getElementById('modal-qty').value = cart[code]?.qty || 1;
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+  state.modalCode = null;
+}
+function mQty(d) {
+  const el = document.getElementById('modal-qty');
+  el.value = Math.max(1, parseInt(el.value||1) + d);
+}
+function addFromModal() {
+  const code = state.modalCode;
+  if (!code) return;
+  const qty = Math.max(1, parseInt(document.getElementById('modal-qty').value) || 1);
+  if (!cart[code]) cart[code] = { item: ITEMS.find(i=>i.code===code), qty };
+  else cart[code].qty = qty;
+  updateCart();
+  closeModal();
+  toggleCart();
+}
+
+// ── Excel 견적서 출력 ──────────────────────────────────────
+function exportExcel() {
+  const keys = Object.keys(cart);
+  if (!keys.length) { alert('장바구니가 비어 있습니다.'); return; }
+
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  const header = ['No.','상품코드','브랜드','품명','규격','단위','단가','수량','금액'];
+  const rows = keys.map((code, i) => {
+    const {item, qty} = cart[code];
+    const p = mp(item.price);
+    return [i+1, item.code, item.brand, item.name, item.spec, item.unit, p, qty, p*qty];
+  });
+  const total = rows.reduce((s,r) => s + r[8], 0);
+  rows.push(['','','','','','','합계','', total]);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['한스코퍼레이션 공기구 견적서'],
+    [`견적일: ${dateStr}`],
+    [],
+    header,
+    ...rows
+  ]);
+
+  // 열 너비
+  ws['!cols'] = [{wch:5},{wch:14},{wch:14},{wch:22},{wch:28},{wch:6},{wch:12},{wch:6},{wch:14}];
+
+  XLSX.utils.book_append_sheet(wb, ws, '견적서');
+  XLSX.writeFile(wb, `공기구견적서_${dateStr}.xlsx`);
+}
+
+// ── 관리자 패널 (로고 5회 클릭) ──────────────────────────
+let _logoCnt = 0, _logoTimer;
+document.getElementById('logo').addEventListener('click', () => {
   _logoCnt++;
   clearTimeout(_logoTimer);
-  _logoTimer=setTimeout(()=>_logoCnt=0, 2000);
-  if(_logoCnt>=5){
-    _logoCnt=0;
-    document.getElementById('admin-margin').value=(MARGIN_RATE*100).toFixed(1);
-    document.getElementById('admin-modal').style.display='flex';
+  _logoTimer = setTimeout(() => _logoCnt=0, 2000);
+  if (_logoCnt >= 5) {
+    _logoCnt = 0;
+    document.getElementById('admin-margin').value = (MARGIN_RATE*100).toFixed(1);
+    document.getElementById('admin-modal').style.display = 'flex';
   }
 });
-function saveAdminMargin(){
-  const v=parseFloat(document.getElementById('admin-margin').value);
-  if(isNaN(v)||v<0||v>300){alert('0~300 사이 숫자를 입력해주세요.');return;}
-  MARGIN_RATE=v/100;
-  localStorage.setItem('hs_margin',MARGIN_RATE.toString());
+function saveAdminMargin() {
+  const v = parseFloat(document.getElementById('admin-margin').value);
+  if (isNaN(v) || v<0 || v>300) { alert('0~300 사이 숫자를 입력해주세요.'); return; }
+  MARGIN_RATE = v / 100;
+  localStorage.setItem('hs_margin', MARGIN_RATE.toString());
   closeAdmin();
-  // 현재 화면 가격 즉시 갱신
-  if(state.catIdx!==null) renderProducts();
-  else if(state.q.length>=2) renderSearch();
+  renderGrid();
+  updateCart();
   alert(`마진율 ${v}%로 저장됐습니다.`);
 }
-function closeAdmin(){ document.getElementById('admin-modal').style.display='none'; }
+function closeAdmin() { document.getElementById('admin-modal').style.display = 'none'; }
 
-// ──────────────────────────────────────
-// 검색
-// ──────────────────────────────────────
-let searchTimer;
-document.getElementById('q').addEventListener('input',function(){
-  clearTimeout(searchTimer);
-  const v=this.value.trim();
-  document.getElementById('btn-clear-q').style.display=v?'block':'none';
-  searchTimer=setTimeout(()=>{ state.q=v; state.page=0; render(); },300);
-});
-document.getElementById('btn-clear-q').onclick=()=>{
-  document.getElementById('q').value='';
-  document.getElementById('btn-clear-q').style.display='none';
-  state.q=''; state.page=0; render();
-};
-document.getElementById('sub-filter').oninput=renderSubCards;
-document.getElementById('sort-sel').onchange=function(){
-  state.sort=this.value; state.page=0;
-  if(state.q.length>=2) renderSearch();
-  else if(state.catIdx!==null) renderProducts();
-};
-
-// ──────────────────────────────────────
-// 엑셀
-// ──────────────────────────────────────
-document.getElementById('btn-excel').onclick=()=>{
-  const entries=Object.values(cart);
-  if(!entries.length){alert('장바구니가 비어 있습니다.');return;}
-  const wb=XLSX.utils.book_new();
-  const rows=[
-    [COMPANY_NAME+' 자재 견적서'],
-    ['발주일자',new Date().toLocaleDateString('ko-KR')],
-    [],
-    ['No','품번','품명','브랜드','단위','단가','수량','소계']
-  ];
-  let total=0,no=1;
-  for(const {item,qty} of entries){
-    const [cd,name,bi,price,unit]=item;
-    const p=mp(price),sub=p*qty; total+=sub;
-    rows.push([no++,cd,name,DB.brands[bi]||'',unit||'',p,qty,sub]);
-  }
-  rows.push([],[,'','','','','합계','',total]);
-  const ws=XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:4},{wch:14},{wch:40},{wch:14},{wch:6},{wch:10},{wch:6},{wch:12}];
-  XLSX.utils.book_append_sheet(wb,ws,'견적서');
-  XLSX.writeFile(wb,`${COMPANY_NAME}_견적서_${new Date().toISOString().slice(0,10)}.xlsx`);
-};
-
-// ──────────────────────────────────────
-// 이메일
-// ──────────────────────────────────────
-document.getElementById('btn-email').onclick=()=>{
-  const entries=Object.values(cart);
-  if(!entries.length){alert('장바구니가 비어 있습니다.');return;}
-  const date=new Date().toLocaleDateString('ko-KR');
-  let body=`${COMPANY_NAME} 자재 발주서\n발주일: ${date}\n\n`;
-  let total=0,no=1;
-  for(const {item,qty} of entries.slice(0,30)){
-    const [cd,name,,price,unit]=item;
-    const p=mp(price),sub=p*qty; total+=sub;
-    body+=`${no++}. [${cd}] ${name}\n   단가: ₩${fmt(p)} × ${qty}${unit?'('+unit+')':''} = ₩${fmt(sub)}\n`;
-  }
-  if(entries.length>30) body+=`\n... 외 ${entries.length-30}개 품목 (엑셀 첨부 참조)\n`;
-  body+=`\n합계: ₩${fmt(total)}\n\n${COMPANY_NAME} 담당자 드림`;
-  location.href=`mailto:${ORDER_EMAIL}?subject=${encodeURIComponent(COMPANY_NAME+' 자재발주 '+date)}&body=${encodeURIComponent(body)}`;
-};
-
-// ──────────────────────────────────────
-// 시작
-// ──────────────────────────────────────
-loadData().catch(e=>{
-  const el=document.getElementById('prog-text');
-  el.style.color='#e84040';
-  el.textContent='데이터 로딩 실패: '+e.message;
-});
+// ── 초기화 ──────────────────────────────────────────────────
+buildBrandChips();
+renderGrid();
+updateCart();
 </script>
 </body>
 </html>
